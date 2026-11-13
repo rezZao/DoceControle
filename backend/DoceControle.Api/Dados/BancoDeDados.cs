@@ -90,10 +90,13 @@ public static class CargaInicial
         foreach (var (tabela, coluna, definicao) in novas)
         {
             var existentes = await db.Database
-                .SqlQueryRaw<string>($"SELECT name AS Value FROM pragma_table_info('{tabela}')")
+                .SqlQueryRaw<string>("SELECT name AS Value FROM pragma_table_info({0})", tabela)
                 .ToListAsync();
             if (existentes.Contains(coluna)) continue;
+            // Nomes de tabela e coluna não podem ser parâmetros em DDL; vêm só da lista fixa acima, nunca do usuário.
+#pragma warning disable EF1002
             await db.Database.ExecuteSqlRawAsync($"ALTER TABLE {tabela} ADD COLUMN {coluna} {definicao}");
+#pragma warning restore EF1002
         }
         await db.Database.ExecuteSqlRawAsync(
             "CREATE INDEX IF NOT EXISTS IX_Alimentos_CodigoBarras ON Alimentos (CodigoBarras)");
