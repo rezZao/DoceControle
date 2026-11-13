@@ -5,7 +5,7 @@ import { lerCodigoDeBarras } from '../codigoDeBarras'
 import { Aviso, Carregando, Icone, Selo } from '../componentes/Base'
 import { NovoAlimento } from '../componentes/NovoAlimento'
 import { useConta, useContaAtiva } from '../conta'
-import { dataHoraLocal, dataIso, fmt, gramas, lerNumero, nutriente, paraApi, prepararFoto, useDados } from '../util'
+import { dataHoraLocal, dataIso, fmt, gramas, lerNumero, nutriente, paraApi, prepararFoto, rolarPara, useDados } from '../util'
 
 interface ItemEdicao {
   chave: number
@@ -106,8 +106,16 @@ export function Refeicao() {
   const [itens, setItens] = useState<ItemEdicao[]>([])
   const [sugestao, setSugestao] = useState<Sugestao | null>(null)
   const [modo, setModo] = useState<Modo>(conta.ia.configurada && conta.ia.consentida ? 'texto' : 'manual')
-  const [criando, setCriando] = useState<{ nome: string; chave: number | null; proposta?: PropostaAlimento } | null>(null)
+  const [criando, setCriando] = useState<{
+    nome: string
+    chave: number | null
+    proposta?: PropostaAlimento
+    /** Muda a cada pedido, para reabrir (e rolar até) o painel mesmo que ele já esteja aberto. */
+    pedido: number
+  } | null>(null)
   const [extras, setExtras] = useState<Alimento[]>([])
+  const abrirCriacao = (dados: { nome: string; chave: number | null; proposta?: PropostaAlimento }) =>
+    setCriando({ ...dados, pedido: Date.now() })
   const [descricao, setDescricao] = useState('')
   const [analisando, setAnalisando] = useState(false)
   const [avisoIA, setAvisoIA] = useState<string | null>(null)
@@ -197,6 +205,8 @@ export function Refeicao() {
       adicionar(alimento)
     }
     setCriando(null)
+    // O painel some e a página encolhe: leva você de volta à lista, onde o alimento acabou de entrar.
+    window.setTimeout(() => rolarPara(document.getElementById('titulo-itens'), 'center'), 80)
   }
 
   function ajustarPorcao(item: ItemEdicao, sentido: 1 | -1) {
@@ -263,7 +273,7 @@ export function Refeicao() {
             return
           }
           if (r.proposta) {
-            setCriando({ nome: r.proposta.nome, chave: null, proposta: r.proposta })
+            abrirCriacao({ nome: r.proposta.nome, chave: null, proposta: r.proposta })
             return
           }
         } catch (e) {
@@ -356,7 +366,7 @@ export function Refeicao() {
 
       {criando && (
         <NovoAlimento
-          key={criando.chave ?? 'novo'}
+          key={criando.pedido}
           nomeInicial={criando.nome}
           propostaInicial={criando.proposta}
           aoPronto={aoCriado}
@@ -454,7 +464,7 @@ export function Refeicao() {
               base={catalogo}
               rotulo="Buscar alimento"
               aoEscolher={adicionar}
-              aoCriar={(nome) => setCriando({ nome, chave: null })}
+              aoCriar={(nome) => abrirCriacao({ nome, chave: null })}
             />
           )}
         </section>
@@ -545,7 +555,7 @@ export function Refeicao() {
                         base={catalogo}
                         rotulo="Escolha o alimento na base"
                         inicial={item.descricao ?? ''}
-                        aoCriar={(nome) => setCriando({ nome: nome || item.descricao || '', chave: item.chave })}
+                        aoCriar={(nome) => abrirCriacao({ nome: nome || item.descricao || '', chave: item.chave })}
                         aoEscolher={(alimento) =>
                           mudarItem(item.chave, {
                             alimento,
@@ -567,7 +577,7 @@ export function Refeicao() {
                 base={catalogo}
                 rotulo="Buscar alimento"
                 aoEscolher={adicionar}
-                aoCriar={(nome) => setCriando({ nome, chave: null })}
+                aoCriar={(nome) => abrirCriacao({ nome, chave: null })}
               />
             </details>
           )}

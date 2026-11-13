@@ -118,3 +118,10 @@ export async function arquivoParaBase64(arquivo: Blob): Promise<string> {
   for (let i = 0; i < bytes.length; i += 0x8000) texto += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
   return btoa(texto)
 }
+
+/** Leva um elemento para a tela, sem animação quando o usuário pediu para reduzir movimento. */
+export function rolarPara(elemento: Element | null, bloco: ScrollLogicalPosition = 'start') {
+  if (!elemento) return
+  const reduzir = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  elemento.scrollIntoView({ behavior: reduzir ? 'auto' : 'smooth', block: bloco })
+}

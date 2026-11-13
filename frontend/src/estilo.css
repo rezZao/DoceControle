@@ -1370,6 +1370,11 @@ input[type='file'] {
 .novo-alimento {
   margin-bottom: 1rem;
   border-color: var(--acento);
+  scroll-margin-top: 4.5rem;
+}
+
+.novo-alimento:focus {
+  outline: none;
 }
 
 .botao-desativado {

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { api, mensagemDeErro, type Alimento, type NovoAlimento as Envio, type PropostaAlimento } from '../api'
 import { lerCodigoDeBarras } from '../codigoDeBarras'
 import { useContaAtiva } from '../conta'
-import { fmt, lerNumero, prepararFoto } from '../util'
+import { fmt, lerNumero, prepararFoto, rolarPara } from '../util'
 import { Aviso, Icone, Selo } from './Base'
 
 type Modo = 'manual' | 'ia' | 'codigo'
@@ -45,6 +45,7 @@ export function NovoAlimento({
   const [erro, setErro] = useState<string | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
   const campoNome = useRef<HTMLInputElement>(null)
+  const secao = useRef<HTMLElement>(null)
 
   const ia = conta.ia
   const iaDisponivel = ia.configurada && ia.consentida
@@ -64,6 +65,17 @@ export function NovoAlimento({
     setErro(null)
     window.setTimeout(() => campoNome.current?.focus(), 0)
   }
+
+  // Ao abrir, leva o painel para a tela: ele fica no topo da página e o botão que o abre pode estar lá embaixo.
+  // Espera o layout assentar: quando algo surge acima da tela, o navegador ajusta a rolagem para manter o
+  // conteúdo visível no lugar, e esse ajuste cancelaria uma rolagem pedida no mesmo instante.
+  useEffect(() => {
+    const espera = window.setTimeout(() => {
+      rolarPara(secao.current)
+      secao.current?.focus({ preventScroll: true })
+    }, 60)
+    return () => window.clearTimeout(espera)
+  }, [])
 
   useEffect(() => {
     if (propostaInicial) preencher(propostaInicial)
@@ -153,7 +165,7 @@ export function NovoAlimento({
   const bloqueadoPorIA = !iaDisponivel
 
   return (
-    <section className="cartao novo-alimento" aria-labelledby="titulo-novo-alimento">
+    <section ref={secao} tabIndex={-1} className="cartao novo-alimento" aria-labelledby="titulo-novo-alimento">
       <div className="cartao-topo">
         <h2 id="titulo-novo-alimento">Criar alimento</h2>
         <button type="button" className="botao-texto" onClick={aoCancelar}>

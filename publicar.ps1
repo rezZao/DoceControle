@@ -14,6 +14,10 @@ $ErrorActionPreference = 'Stop'
 $raiz = $PSScriptRoot
 $saida = Join-Path $raiz 'dist\DoceControle'
 
+# Não apaga a pasta do programa se ele estiver aberto (o site é lido dessa pasta).
+$aberto = Get-Process -Name DoceControle -ErrorAction SilentlyContinue | Where-Object { $_.Path -like "$saida*" }
+if ($aberto) { throw 'O DoceControle está aberto. Feche a janela dele e rode o script de novo.' }
+
 function Executar([string]$descricao, [scriptblock]$comando) {
     Write-Host "==> $descricao" -ForegroundColor Cyan
     & $comando
