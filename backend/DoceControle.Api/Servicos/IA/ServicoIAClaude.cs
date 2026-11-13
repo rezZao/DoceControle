@@ -47,11 +47,12 @@ public class ServicoIAClaude : IServicoIA
             "categoria": { "type": "string" },
             "carboPor100g": { "type": "number" },
             "proteinaPor100g": { "type": "number" },
+            "gorduraPor100g": { "type": "number" },
             "porcaoPadraoG": { "type": "number" },
             "porcaoDescricao": { "type": "string" },
             "observacao": {{TextoOuNulo}}
           },
-          "required": ["nome", "categoria", "carboPor100g", "proteinaPor100g", "porcaoPadraoG", "porcaoDescricao", "observacao"],
+          "required": ["nome", "categoria", "carboPor100g", "proteinaPor100g", "gorduraPor100g", "porcaoPadraoG", "porcaoDescricao", "observacao"],
           "additionalProperties": false
         }
         """;
@@ -301,6 +302,7 @@ public class ServicoIAClaude : IServicoIA
           Verduras e legumes, Carnes e ovos, Leites e derivados, Oleaginosas, Bebidas, Doces e açúcares, Outros.
         - carboPor100g: carboidratos totais, em gramas por 100 g.
         - proteinaPor100g: proteínas, em gramas por 100 g.
+        - gorduraPor100g: gorduras totais, em gramas por 100 g.
         - porcaoPadraoG e porcaoDescricao: uma porção usual em gramas e sua medida caseira ("1 fatia", "2 colheres de sopa").
         - observacao: diga em uma frase de onde vêm os números. Se a foto mostra a tabela nutricional, use os valores
           impressos (convertendo para 100 g quando a tabela for por porção) e diga que foram lidos do rótulo.

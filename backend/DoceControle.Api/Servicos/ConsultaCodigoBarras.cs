@@ -4,7 +4,8 @@ using System.Text.Json;
 namespace DoceControle.Api.Servicos;
 
 public record ProdutoCodigo(
-    string Nome, double? CarboPor100g, double? ProteinaPor100g, double? PorcaoG, string? PorcaoDescricao);
+    string Nome, double? CarboPor100g, double? ProteinaPor100g, double? GorduraPor100g, double? PorcaoG,
+    string? PorcaoDescricao);
 
 /// <summary>A consulta não pôde ser feita (sem internet, serviço fora do ar). O cadastro manual segue disponível.</summary>
 public class ConsultaCodigoIndisponivelException(string mensagem, Exception? causa = null) : Exception(mensagem, causa);
@@ -55,17 +56,18 @@ public class ConsultaOpenFoodFacts(HttpClient http, ILogger<ConsultaOpenFoodFact
             if (!string.IsNullOrEmpty(marca) && !nome.Contains(marca, StringComparison.OrdinalIgnoreCase))
                 nome = nome.Length > 0 ? $"{nome} ({marca})" : marca;
 
-            double? carbo = null, proteina = null;
+            double? carbo = null, proteina = null, gordura = null;
             if (produto.TryGetProperty("nutriments", out var nutrientes) && nutrientes.ValueKind == JsonValueKind.Object)
             {
                 carbo = Numero(nutrientes, "carbohydrates_100g");
                 proteina = Numero(nutrientes, "proteins_100g");
+                gordura = Numero(nutrientes, "fat_100g");
             }
 
             var porcao = Numero(produto, "serving_quantity");
             var descricao = Texto(produto, "serving_size");
             return new ProdutoCodigo(
-                nome.Length > 80 ? nome[..80] : nome, carbo, proteina,
+                nome.Length > 80 ? nome[..80] : nome, carbo, proteina, gordura,
                 porcao is > 0 ? porcao : null,
                 descricao is { Length: > 0 and <= 40 } ? descricao : null);
         }

@@ -138,7 +138,8 @@ public static class Regras
 
     /// <summary>Valida um alimento criado pelo usuário. Devolve a mensagem de erro, ou nulo se estiver tudo certo.</summary>
     public static string? ValidarAlimento(
-        string? nome, double carboPor100g, double proteinaPor100g, double porcaoG, string? porcaoDescricao,
+        string? nome, double carboPor100g, double proteinaPor100g, double gorduraPor100g, double porcaoG,
+        string? porcaoDescricao,
         string? codigoBarras)
     {
         var nomeLimpo = nome?.Trim() ?? "";
@@ -147,9 +148,11 @@ public static class Regras
             return "Os carboidratos devem ficar entre 0 e 100 g por 100 g do alimento.";
         if (!double.IsFinite(proteinaPor100g) || proteinaPor100g is < 0 or > 100)
             return "As proteínas devem ficar entre 0 e 100 g por 100 g do alimento.";
-        // Carboidratos e proteínas juntos não passam de 100 g em 100 g (com folga para arredondamento).
-        if (carboPor100g + proteinaPor100g > 100.5)
-            return "Carboidratos e proteínas somados não podem passar de 100 g por 100 g do alimento.";
+        if (!double.IsFinite(gorduraPor100g) || gorduraPor100g is < 0 or > 100)
+            return "As gorduras devem ficar entre 0 e 100 g por 100 g do alimento.";
+        // Os três macronutrientes juntos não passam de 100 g em 100 g (com folga para arredondamento).
+        if (carboPor100g + proteinaPor100g + gorduraPor100g > 100.5)
+            return "Carboidratos, proteínas e gorduras somados não podem passar de 100 g por 100 g do alimento.";
         if (!double.IsFinite(porcaoG) || porcaoG is <= 0 or > 2000)
             return "A porção de referência deve ficar entre 1 e 2000 g.";
         if ((porcaoDescricao?.Trim().Length ?? 0) > 40) return "A descrição da porção pode ter até 40 letras.";

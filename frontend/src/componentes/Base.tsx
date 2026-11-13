@@ -1,92 +1,24 @@
 import type { ReactNode } from 'react'
+import { caminhos, type NomeIcone } from '../icones'
 import { fmt } from '../util'
 
-type NomeIcone =
-  | 'alerta'
-  | 'ok'
-  | 'info'
-  | 'sino'
-  | 'mais'
-  | 'lixeira'
-  | 'lapis'
-  | 'estrela'
-  | 'seta-esq'
-  | 'seta-dir'
-  | 'casa'
-  | 'prato'
-  | 'gota'
-  | 'menu'
-  | 'chevron-baixo'
-  | 'chevron-dir'
-  | 'relogio'
+export type { NomeIcone }
 
-const desenhos: Record<NomeIcone, ReactNode> = {
-  alerta: (
-    <>
-      <path d="M12 3.5 2.5 20h19L12 3.5Z" />
-      <path d="M12 10v4.5M12 17.2v.3" />
-    </>
-  ),
-  ok: (
-    <>
-      <circle cx="12" cy="12" r="9" />
-      <path d="m8 12.5 2.7 2.7L16 9.5" />
-    </>
-  ),
-  info: (
-    <>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 11v5.5M12 7.5v.3" />
-    </>
-  ),
-  sino: (
-    <>
-      <path d="M6 16.5V11a6 6 0 1 1 12 0v5.5l1.5 2h-15l1.5-2Z" />
-      <path d="M10 21h4" />
-    </>
-  ),
-  mais: <path d="M12 5v14M5 12h14" />,
-  lixeira: <path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 11v5.5M14 11v5.5" />,
-  lapis: <path d="m4 20 1-4.5L16.5 4l3.5 3.5L8.5 19 4 20ZM14 6.5l3.5 3.5" />,
-  estrela: <path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8L12 3.5Z" />,
-  'seta-esq': <path d="M14.5 5.5 8 12l6.5 6.5" />,
-  'seta-dir': <path d="M9.5 5.5 16 12l-6.5 6.5" />,
-  casa: <path d="M3.5 11 12 4l8.5 7M6 9.5V20h12V9.5M10 20v-5.5h4V20" />,
-  prato: (
-    <>
-      <path d="M12 3v1.5M5.5 11a6.5 6.5 0 0 1 13 0" />
-      <path d="M3.5 13h17M5.5 13c.4 3.6 2.8 6.5 6.5 6.5s6.1-2.9 6.5-6.5" />
-    </>
-  ),
-  gota: <path d="M12 3.5c3.2 4 5.5 6.9 5.5 10a5.5 5.5 0 0 1-11 0c0-3.1 2.3-6 5.5-10Z" />,
-  menu: <path d="M5 7h14M5 12h14M5 17h14" />,
-  'chevron-baixo': <path d="m6 9.5 6 6 6-6" />,
-  'chevron-dir': <path d="m9.5 6 6 6-6 6" />,
-  relogio: (
-    <>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 2" />
-    </>
-  ),
-}
-
-/** Ícone decorativo: o significado vem sempre do texto ao lado. */
-export function Icone({ nome, tamanho = 20 }: { nome: NomeIcone; tamanho?: number }) {
+/** Ícone decorativo (Google Material Symbols): o significado vem sempre do texto ao lado. */
+export function Icone({ nome, tamanho = 22 }: { nome: NomeIcone; tamanho?: number }) {
   return (
     <svg
       className="icone"
       width={tamanho}
       height={tamanho}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      viewBox="0 -960 960 960"
+      fill="currentColor"
       aria-hidden="true"
       focusable="false"
     >
-      {desenhos[nome]}
+      {caminhos[nome].map((d, i) => (
+        <path key={i} d={d} />
+      ))}
     </svg>
   )
 }

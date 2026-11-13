@@ -16,7 +16,7 @@ public record ResultadoIA(List<ItemIdentificado> Itens);
 /// "estimado pela IA". Os nutrientes de uma refeição continuam vindo da base, nunca da resposta da IA (RI11).
 /// </summary>
 public record AlimentoEstimado(
-    string Nome, string Categoria, double CarboPor100g, double ProteinaPor100g, double PorcaoPadraoG,
+    string Nome, string Categoria, double CarboPor100g, double ProteinaPor100g, double GorduraPor100g, double PorcaoPadraoG,
     string PorcaoDescricao, string? Observacao);
 
 /// <summary>A IA falhou ou não está disponível. O registro manual continua valendo (RN19).</summary>

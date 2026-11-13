@@ -47,12 +47,12 @@ public record LembreteDto(
 
 // Alimentos
 public record AlimentoDto(
-    int Id, string Nome, string Categoria, double CarboPor100g, double ProteinaPor100g,
+    int Id, string Nome, string Categoria, double CarboPor100g, double ProteinaPor100g, double GorduraPor100g,
     double PorcaoPadraoG, string PorcaoDescricao, OrigemAlimento Origem, string? CodigoBarras, bool Proprio);
 
 /// <summary>Alimento que o usuário cria. A origem só pode ser Manual, IA ou CodigoBarras.</summary>
 public record NovoAlimentoReq(
-    string? Nome, string? Categoria, double CarboPor100g, double ProteinaPor100g, double PorcaoPadraoG,
+    string? Nome, string? Categoria, double CarboPor100g, double ProteinaPor100g, double GorduraPor100g, double PorcaoPadraoG,
     string? PorcaoDescricao, OrigemAlimento Origem, string? CodigoBarras);
 
 /// <summary>
@@ -60,7 +60,7 @@ public record NovoAlimentoReq(
 /// Nada é gravado até o usuário conferir e confirmar. Os números ficam nulos quando a fonte não os tem.
 /// </summary>
 public record PropostaAlimentoDto(
-    string Nome, string Categoria, double? CarboPor100g, double? ProteinaPor100g, double PorcaoPadraoG,
+    string Nome, string Categoria, double? CarboPor100g, double? ProteinaPor100g, double? GorduraPor100g, double PorcaoPadraoG,
     string PorcaoDescricao, OrigemAlimento Origem, string? CodigoBarras, string? Observacao);
 
 /// <summary>Resultado de um código de barras: um alimento que já existe, ou uma proposta para confirmar.</summary>
@@ -72,9 +72,11 @@ public record SugestaoAlimentoFotoReq(string? ImagemBase64, string? Descricao);
 // Refeições
 public record ItemReq(int AlimentoId, double QuantidadeG, bool DaSugestao);
 public record RefeicaoReq(DateTime DataHora, string? Refeicao, List<ItemReq>? Itens, int? SugestaoId);
-public record ItemDto(int AlimentoId, string Nome, double QuantidadeG, double Carbo, double Proteina, bool DaIA);
+public record ItemDto(
+    int AlimentoId, string Nome, double QuantidadeG, double Carbo, double Proteina, double Gordura, bool DaIA);
 public record RegistroRefeicaoDto(
-    int Id, DateTime DataHora, string Refeicao, double TotalCarbo, double TotalProteina, List<ItemDto> Itens);
+    int Id, DateTime DataHora, string Refeicao, double TotalCarbo, double TotalProteina, double TotalGordura,
+    List<ItemDto> Itens);
 public record RefeicaoGravadaDto(RegistroRefeicaoDto Registro, List<string> Avisos);
 
 // Glicemia
@@ -84,19 +86,19 @@ public record GlicemiaDto(int Id, int Valor, DateTime DataHora, SituacaoGlicemia
 // Dia (painel e dieta)
 public record RefeicaoDoDiaDto(
     string Nome, string Horario, double LimiteCarbo, double? MetaProteina,
-    double CarboConsumido, double ProteinaConsumida, double CarboRestante, bool LimiteUltrapassado,
+    double CarboConsumido, double ProteinaConsumida, double GorduraConsumida, double CarboRestante, bool LimiteUltrapassado,
     List<RegistroRefeicaoDto> Registros, List<PorcaoExemplo> Exemplos);
 public record DiaDto(
     string Data, PrescricaoDto? Prescricao,
     double CarboConsumido, double? CarboLimite, double? CarboRestante, bool LimiteUltrapassado,
-    double ProteinaConsumida, double? ProteinaMeta,
+    double ProteinaConsumida, double? ProteinaMeta, double GorduraConsumida,
     List<RefeicaoDoDiaDto> Refeicoes, List<RegistroRefeicaoDto> OutrosRegistros,
     List<GlicemiaDto> Glicemias, string AvisoOrientacao);
 
 // Histórico e relatório
 public record DiaHistoricoDto(
     string Data, double CarboConsumido, double? CarboLimite, bool LimiteUltrapassado,
-    double ProteinaConsumida, double? ProteinaMeta, int Refeicoes,
+    double ProteinaConsumida, double? ProteinaMeta, double GorduraConsumida, int Refeicoes,
     int Medicoes, int? GlicemiaMin, int? GlicemiaMax, double? GlicemiaMedia, int MedicoesForaDaFaixa,
     int? FaixaMin, int? FaixaMax);
 public record LembreteRelatorioDto(string Horario, double? DoseInformada, string? Descricao, int DiasConfirmados, int DiasNoPeriodo);
@@ -107,6 +109,7 @@ public record RelatorioDto(
 // IA
 public record SugestaoTextoReq(string? Descricao);
 public record SugestaoFotoReq(string? ImagemBase64);
-public record ItemSugeridoDto(string Descricao, double QuantidadeG, AlimentoDto? Alimento, double? Carbo, double? Proteina);
+public record ItemSugeridoDto(
+    string Descricao, double QuantidadeG, AlimentoDto? Alimento, double? Carbo, double? Proteina, double? Gordura);
 public record SugestaoDto(int Id, EntradaIA Entrada, List<ItemSugeridoDto> Itens, int UsosRestantes);
 public record AlimentoEstimadoDto(PropostaAlimentoDto Proposta, int UsosRestantes);

@@ -2,7 +2,8 @@
 
 Site que transforma os limites de carboidratos e de glicose prescritos pelo médico em uma dieta do dia, com
 registro de refeições (manual, por descrição com IA e, no premium, por foto), alimentos criados pelo usuário,
-leitura de código de barras, glicemia, lembretes de insulina, tempo máximo sem comer, histórico e relatório.
+leitura de código de barras, glicemia, lembretes de insulina, tempo máximo sem comer, histórico e relatório. Mostra os três macronutrientes
+(carboidratos, proteínas e gorduras) no topo do dia e em cada refeição.
 Implementa o documento do projeto (RF01–RF20, RN01–RN26, RI01–RI15).
 
 - **Backend:** C# / ASP.NET Core 10, EF Core + SQLite (`backend/DoceControle.Api`)
@@ -112,10 +113,17 @@ próprio site). O servidor consulta o produto no [Open Food Facts](https://world
 
 ## Limites desta versão (escopo acadêmico)
 
-- **Base de alimentos:** valores aproximados, inspirados na TACO. Precisam ser conferidos com a tabela oficial antes de qualquer uso real.
+- **Base de alimentos:** valores de carboidratos, proteínas e gorduras aproximados, inspirados na TACO. Precisam ser conferidos com a tabela oficial antes de qualquer uso real.
+- **Calorias:** o app mostra só os três macronutrientes; não calcula calorias.
 - **Textos de saúde** (`Textos` em `Regras.cs`): provisórios, pendentes de revisão por profissional de saúde.
 - **Pagamento:** simulado (`ProvedorPagamentoSimulado`); nenhum valor é cobrado.
 - **Banco:** criado com `EnsureCreated`; as colunas novas são acrescentadas na inicialização para não perder dados. Uma versão comercial deve usar migrações do EF.
 - **IA real:** o código foi verificado com um servidor que imita a API, mas ainda não com uma chave real.
 - **Leitura de código de barras:** testada na consulta ao Open Food Facts; a leitura da foto no navegador ainda não foi testada com fotos reais.
 - O DoceControle não substitui a orientação médica e não calcula nem sugere doses de insulina.
+
+## Licenças de terceiros
+
+- **Ícones:** [Google Material Symbols](https://fonts.google.com/icons) (estilo *outlined*), pacote `@material-symbols/svg-400`, licença Apache 2.0.
+- **Dados de produtos por código de barras:** [Open Food Facts](https://world.openfoodfacts.org), base aberta e colaborativa (ODbL).
+- **Leitura de código de barras no navegador:** `barcode-detector` e `zxing-wasm`, licença MIT.

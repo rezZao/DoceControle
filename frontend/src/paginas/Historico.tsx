@@ -16,6 +16,7 @@ export function TabelaHistorico({ dias, comLinks = false }: { dias: DiaHistorico
             <th scope="col" className="num">Carboidratos</th>
             <th scope="col" className="num">Limite</th>
             <th scope="col" className="num">Proteínas</th>
+            <th scope="col" className="num">Gorduras</th>
             <th scope="col" className="num">Glicemia (mín. – máx.)</th>
             <th scope="col" className="num">Fora da faixa</th>
           </tr>
@@ -45,6 +46,7 @@ export function TabelaHistorico({ dias, comLinks = false }: { dias: DiaHistorico
               </td>
               <td className="num">{d.carboLimite === null ? '—' : gramas(d.carboLimite)}</td>
               <td className="num">{d.refeicoes === 0 ? '—' : gramas(d.proteinaConsumida)}</td>
+              <td className="num">{d.refeicoes === 0 ? '—' : gramas(d.gorduraConsumida)}</td>
               <td className="num">{d.medicoes === 0 ? '—' : `${d.glicemiaMin} – ${d.glicemiaMax}`}</td>
               <td className="num">{d.medicoes === 0 ? '—' : `${d.medicoesForaDaFaixa} de ${d.medicoes}`}</td>
             </tr>

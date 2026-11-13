@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { api } from '../api'
 import { Aviso, Carregando, Icone, Orientacao } from '../componentes/Base'
+import { iconeDaRefeicao } from '../icones'
 import { dataIso, duracao, fmt, useDados } from '../util'
 
 const MAX_IDEIAS = 4
@@ -65,20 +66,26 @@ export function Dieta() {
           <li key={r.nome}>
             <details className="plano-item" name="plano" open={i === aberta || undefined}>
               <summary>
-                <span className="plano-hora">{r.horario}</span>
+                <span className="refeicao-icone" aria-hidden="true">
+                  <Icone nome={iconeDaRefeicao(r.nome)} />
+                </span>
                 <span className="plano-nome">
                   <strong>{r.nome}</strong>
-                  {r.carboConsumido > 0 && (
-                    <span className={`plano-sub${r.limiteUltrapassado ? ' plano-sub-alerta' : ''}`}>
-                      {r.limiteUltrapassado ? (
-                        <>
-                          <Icone nome="alerta" tamanho={14} /> Acima do limite
-                        </>
-                      ) : (
-                        `Restam ${fmt(r.carboRestante)} g`
-                      )}
-                    </span>
-                  )}
+                  <span className={`plano-sub${r.limiteUltrapassado ? ' plano-sub-alerta' : ''}`}>
+                    {r.horario}
+                    {r.carboConsumido > 0 && (
+                      <>
+                        {' · '}
+                        {r.limiteUltrapassado ? (
+                          <>
+                            <Icone nome="alerta" tamanho={14} /> Acima do limite
+                          </>
+                        ) : (
+                          `Restam ${fmt(r.carboRestante)} g`
+                        )}
+                      </>
+                    )}
+                  </span>
                 </span>
                 <span className="plano-limite">
                   {fmt(r.limiteCarbo)} <small>g</small>

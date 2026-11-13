@@ -22,7 +22,7 @@ public static class Formatos
 public static class Conversoes
 {
     public static AlimentoDto ParaDto(this Alimento a) => new(
-        a.Id, a.Nome, a.Categoria, a.CarboPor100g, a.ProteinaPor100g, a.PorcaoPadraoG, a.PorcaoDescricao,
+        a.Id, a.Nome, a.Categoria, a.CarboPor100g, a.ProteinaPor100g, a.GorduraPor100g, a.PorcaoPadraoG, a.PorcaoDescricao,
         a.Origem, a.CodigoBarras, a.UsuarioId is not null);
 
     public static MetaDto ParaDto(this MetaDeRefeicao m) =>
@@ -35,9 +35,11 @@ public static class Conversoes
 
     public static RegistroRefeicaoDto ParaDto(this RegistroRefeicao r) => new(
         r.Id, r.DataHora, r.Refeicao, Regras.Arredondar(r.TotalCarbo()), Regras.Arredondar(r.TotalProteina()),
+        Regras.Arredondar(r.TotalGordura()),
         r.Itens.Select(i => new ItemDto(
             i.AlimentoId, i.Alimento.Nome, i.QuantidadeG,
-            Regras.Arredondar(i.Carbo()), Regras.Arredondar(i.Proteina()), i.SugestaoIAId is not null)).ToList());
+            Regras.Arredondar(i.Carbo()), Regras.Arredondar(i.Proteina()), Regras.Arredondar(i.Gordura()),
+            i.SugestaoIAId is not null)).ToList());
 
     public static GlicemiaDto ParaDto(this RegistroGlicemia g, Prescricao? vigente)
     {
@@ -97,6 +99,7 @@ public class ServicoDia(BancoDeDados db)
 
         var carbo = registros.Sum(r => r.TotalCarbo());
         var proteina = registros.Sum(r => r.TotalProteina());
+        var gordura = registros.Sum(r => r.TotalGordura());
         var glicemiasDto = glicemias.Select(g => g.ParaDto(prescricao)).ToList();
 
         // RN02: sem prescrição a dieta não é gerada; o painel mostra só o consumo.
@@ -104,7 +107,7 @@ public class ServicoDia(BancoDeDados db)
         {
             return new DiaDto(
                 Formatos.Data(data), null, Regras.Arredondar(carbo), null, null, false,
-                Regras.Arredondar(proteina), null, [], registros.Select(r => r.ParaDto()).ToList(),
+                Regras.Arredondar(proteina), null, Regras.Arredondar(gordura), [], registros.Select(r => r.ParaDto()).ToList(),
                 glicemiasDto, Textos.NaoSubstituiOrientacao);
         }
 
@@ -119,6 +122,7 @@ public class ServicoDia(BancoDeDados db)
             return new RefeicaoDoDiaDto(
                 meta.Nome, Formatos.Hora(meta.Horario), meta.LimiteCarbo, meta.MetaProteina,
                 Regras.Arredondar(consumido), Regras.Arredondar(daRefeicao.Sum(r => r.TotalProteina())),
+                Regras.Arredondar(daRefeicao.Sum(r => r.TotalGordura())),
                 Regras.Arredondar(restante), Regras.Arredondar(consumido) > meta.LimiteCarbo,
                 daRefeicao.Select(r => r.ParaDto()).ToList(),
                 Regras.PorcoesDeExemplo(baseExemplos, meta.Nome, restante));
@@ -133,7 +137,7 @@ public class ServicoDia(BancoDeDados db)
             Regras.Arredondar(carbo), prescricao.LimiteCarboDia,
             Regras.Arredondar(prescricao.LimiteCarboDia - carbo),
             Regras.Arredondar(carbo) > prescricao.LimiteCarboDia,
-            Regras.Arredondar(proteina), prescricao.MetaProteinaDia,
+            Regras.Arredondar(proteina), prescricao.MetaProteinaDia, Regras.Arredondar(gordura),
             refeicoes, outros, glicemiasDto, Textos.NaoSubstituiOrientacao);
     }
 
@@ -176,6 +180,7 @@ public class ServicoDia(BancoDeDados db)
                 Formatos.Data(dia), carbo, vigente?.LimiteCarboDia,
                 vigente is not null && carbo > vigente.LimiteCarboDia,
                 Regras.Arredondar(refeicoes[dia].Sum(r => r.TotalProteina())), vigente?.MetaProteinaDia,
+                Regras.Arredondar(refeicoes[dia].Sum(r => r.TotalGordura())),
                 refeicoes[dia].Count(),
                 valores.Count,
                 valores.Count > 0 ? valores.Min() : null,

@@ -71,7 +71,8 @@ public class BancoDeDados(DbContextOptions<BancoDeDados> opcoes) : DbContext(opc
 public static class CargaInicial
 {
     private record AlimentoJson(
-        string Nome, string Categoria, double Carbo, double Proteina, double PorcaoG, string Porcao, string Tipos);
+        string Nome, string Categoria, double Carbo, double Proteina, double Gordura, double PorcaoG, string Porcao,
+        string Tipos);
 
     /// <summary>
     /// O banco é criado com EnsureCreated, que não altera tabelas já existentes. Para não perder os dados de
@@ -85,6 +86,7 @@ public static class CargaInicial
             ("Alimentos", "UsuarioId", "INTEGER NULL REFERENCES Usuarios(Id) ON DELETE CASCADE"),
             ("Alimentos", "Origem", "INTEGER NOT NULL DEFAULT 0"),
             ("Alimentos", "CodigoBarras", "TEXT NULL"),
+            ("Alimentos", "GorduraPor100g", "REAL NOT NULL DEFAULT 0"),
         ];
 
         foreach (var (tabela, coluna, definicao) in novas)
@@ -107,11 +109,23 @@ public static class CargaInicial
     {
         await db.Database.EnsureCreatedAsync();
         await AtualizarEsquemaAsync(db);
-        if (await db.Alimentos.AnyAsync()) return;
 
         await using var arquivo = File.OpenRead(caminhoAlimentos);
         var itens = await JsonSerializer.DeserializeAsync<List<AlimentoJson>>(
             arquivo, new JsonSerializerOptions(JsonSerializerDefaults.Web)) ?? [];
+
+        if (await db.Alimentos.AnyAsync())
+        {
+            // Bancos criados antes de existir a coluna de gorduras: completa os alimentos da base.
+            var gorduras = itens.ToDictionary(a => Regras.Normalizar(a.Nome), a => a.Gordura);
+            var semGordura = await db.Alimentos.Where(a => a.UsuarioId == null && a.GorduraPor100g == 0).ToListAsync();
+            foreach (var alimento in semGordura)
+            {
+                if (gorduras.TryGetValue(alimento.NomeBusca, out var g) && g > 0) alimento.GorduraPor100g = g;
+            }
+            await db.SaveChangesAsync();
+            return;
+        }
 
         db.Alimentos.AddRange(itens.Select((a, i) => new Alimento
         {
@@ -120,6 +134,7 @@ public static class CargaInicial
             Categoria = a.Categoria,
             CarboPor100g = a.Carbo,
             ProteinaPor100g = a.Proteina,
+            GorduraPor100g = a.Gordura,
             PorcaoPadraoG = a.PorcaoG,
             PorcaoDescricao = a.Porcao,
             Tipos = a.Tipos,

@@ -46,7 +46,7 @@ public static class EndpointsAlimentos
         if (req.Origem == OrigemAlimento.Base) return Erro.Invalido("Origem inválida.");
 
         var codigo = string.IsNullOrWhiteSpace(req.CodigoBarras) ? null : req.CodigoBarras.Trim();
-        if (Regras.ValidarAlimento(req.Nome, req.CarboPor100g, req.ProteinaPor100g, req.PorcaoPadraoG, req.PorcaoDescricao, codigo)
+        if (Regras.ValidarAlimento(req.Nome, req.CarboPor100g, req.ProteinaPor100g, req.GorduraPor100g, req.PorcaoPadraoG, req.PorcaoDescricao, codigo)
             is { } mensagem)
             return Erro.Invalido(mensagem);
         if (codigo is not null) codigo = Regras.NormalizarCodigoDeBarras(codigo);
@@ -71,6 +71,7 @@ public static class EndpointsAlimentos
             Categoria = string.IsNullOrWhiteSpace(req.Categoria) ? "Meus alimentos" : req.Categoria.Trim(),
             CarboPor100g = Math.Round(req.CarboPor100g, 1),
             ProteinaPor100g = Math.Round(req.ProteinaPor100g, 1),
+            GorduraPor100g = Math.Round(req.GorduraPor100g, 1),
             PorcaoPadraoG = Math.Round(req.PorcaoPadraoG, 1),
             PorcaoDescricao = string.IsNullOrWhiteSpace(req.PorcaoDescricao) ? "1 porção" : req.PorcaoDescricao.Trim(),
             Tipos = "", // alimentos criados pelo usuário não entram nas porções de exemplo da dieta
@@ -120,11 +121,11 @@ public static class EndpointsAlimentos
         if (produto is null)
             return Erro.Status(404, "Esse produto não está na base de códigos de barras. Cadastre-o manualmente.", "produto_nao_encontrado");
 
-        var incompleto = produto.CarboPor100g is null || produto.ProteinaPor100g is null;
+        var incompleto = produto.CarboPor100g is null || produto.ProteinaPor100g is null || produto.GorduraPor100g is null;
         return Results.Ok(new CodigoBarrasDto(null, new PropostaAlimentoDto(
             produto.Nome.Length > 0 ? produto.Nome : $"Produto {codigo}",
             "Industrializados",
-            produto.CarboPor100g, produto.ProteinaPor100g,
+            produto.CarboPor100g, produto.ProteinaPor100g, produto.GorduraPor100g,
             produto.PorcaoG ?? 100, produto.PorcaoDescricao ?? (produto.PorcaoG is null ? "100 g" : "1 porção"),
             OrigemAlimento.CodigoBarras, codigo,
             incompleto

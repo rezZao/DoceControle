@@ -1005,28 +1005,48 @@ input[type='file'] {
   color: var(--critico-texto);
 }
 
-.hero-numeros {
+.macros {
+  list-style: none;
+  width: 100%;
+  margin: 0;
+  padding: 0.9rem 0 0;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.5rem;
-  width: 100%;
-  margin: 0;
-  padding-top: 0.9rem;
   border-top: 1px solid var(--borda);
 }
 
-.hero-numeros dt {
+.macros li {
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
+  text-align: center;
+}
+
+.macro-icone {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: var(--acento-fundo);
+  color: var(--acento-forte);
+}
+
+.cartao-destaque .macro-icone {
+  background: var(--superficie);
+}
+
+.macro-nome {
   color: var(--mudo);
   font-size: 0.85rem;
 }
 
-.hero-numeros dd {
-  margin: 0;
+.macros strong {
   font-size: 1.1rem;
-  font-weight: 700;
 }
 
-.hero-numeros small {
+.macros small {
   color: var(--mudo);
   font-size: 0.85rem;
   font-weight: 400;
@@ -1066,16 +1086,23 @@ input[type='file'] {
 .refeicao-topo {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.6rem;
 }
 
-.refeicao-hora,
-.plano-hora {
+.refeicao-topo .botao-icone {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.refeicao-icone {
   flex: none;
-  min-width: 3rem;
-  color: var(--mudo);
-  font-size: 0.9rem;
-  font-variant-numeric: tabular-nums;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 12px;
+  background: var(--acento-fundo);
+  color: var(--acento-forte);
 }
 
 .refeicao-nome {
@@ -1090,12 +1117,11 @@ input[type='file'] {
 
 .refeicao-sub,
 .plano-sub {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
+  display: block;
   margin: 0;
   color: var(--mudo);
   font-size: 0.92rem;
+  line-height: 1.35;
 }
 
 .refeicao-sub-alerta,
@@ -1108,8 +1134,8 @@ input[type='file'] {
   flex: none;
   display: grid;
   place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 2.5rem;
+  height: 2.5rem;
   border-radius: 50%;
   background: var(--acento-fundo);
   color: var(--acento-forte);
@@ -1130,6 +1156,51 @@ input[type='file'] {
 
 .refeicao .lista-registros > li {
   padding: 0.45rem 0 0;
+}
+
+.refeicao-macros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin: 0.5rem 0 0;
+  font-size: 0.92rem;
+  color: var(--tinta-2);
+}
+
+.refeicao-macros > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.registro-macros {
+  color: var(--tinta-2);
+  font-size: 0.92rem;
+}
+
+.registro-itens {
+  list-style: none;
+  padding: 0;
+  margin: 0.35rem 0 0;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.registro-itens li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.registro-itens small {
+  color: var(--mudo);
+}
+
+.registro-item-carbo {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: var(--tinta-2);
 }
 
 .medidor-fino .medidor-trilho {

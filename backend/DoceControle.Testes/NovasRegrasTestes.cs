@@ -121,9 +121,9 @@ public class CodigoDeBarrasTestes
 public class AlimentoCriadoPeloUsuarioTestes
 {
     private static string? Validar(
-        string? nome = "Pão de queijo", double carbo = 34.2, double proteina = 5.1, double porcao = 40,
-        string? descricao = "2 unidades", string? codigo = null) =>
-        Regras.ValidarAlimento(nome, carbo, proteina, porcao, descricao, codigo);
+        string? nome = "Pão de queijo", double carbo = 34.2, double proteina = 5.1, double gordura = 24.6,
+        double porcao = 40, string? descricao = "2 unidades", string? codigo = null) =>
+        Regras.ValidarAlimento(nome, carbo, proteina, gordura, porcao, descricao, codigo);
 
     [Fact]
     public void Alimento_correto_e_aceito() => Assert.Null(Validar());
@@ -138,14 +138,40 @@ public class AlimentoCriadoPeloUsuarioTestes
     public void Exige_nome(string? nome) => Assert.NotNull(Validar(nome: nome));
 
     [Theory]
-    [InlineData(-1, 5)]
-    [InlineData(101, 0)]
-    [InlineData(10, -0.1)]
-    [InlineData(double.NaN, 5)]
-    [InlineData(60, 50)] // somados passam de 100 g em 100 g
-    public void Recusa_valores_nutricionais_impossiveis(double carbo, double proteina)
+    [InlineData(-1, 5, 0)]
+    [InlineData(101, 0, 0)]
+    [InlineData(10, -0.1, 0)]
+    [InlineData(double.NaN, 5, 0)]
+    [InlineData(60, 50, 0)]   // carboidratos e proteínas somados passam de 100 g em 100 g
+    [InlineData(10, 5, -1)]   // gordura negativa
+    [InlineData(10, 5, 101)]  // gordura acima de 100 g
+    [InlineData(10, 5, double.NaN)]
+    [InlineData(40, 30, 40)]  // os três somados passam de 100 g em 100 g
+    public void Recusa_valores_nutricionais_impossiveis(double carbo, double proteina, double gordura)
     {
-        Assert.NotNull(Validar(carbo: carbo, proteina: proteina));
+        Assert.NotNull(Validar(carbo: carbo, proteina: proteina, gordura: gordura));
+    }
+
+    [Fact]
+    public void Aceita_alimento_so_de_gordura() => Assert.Null(Validar(carbo: 0, proteina: 0.5, gordura: 82.4));
+
+    [Fact]
+    public void Gordura_e_calculada_pela_base_como_os_outros_macronutrientes()
+    {
+        var queijo = new Alimento { Nome = "Queijo", CarboPor100g = 3, ProteinaPor100g = 22.6, GorduraPor100g = 24.2 };
+        var pao = new Alimento { Nome = "Pão", CarboPor100g = 58.6, ProteinaPor100g = 8, GorduraPor100g = 3.1 };
+        var registro = new RegistroRefeicao
+        {
+            Itens =
+            [
+                new ItemRefeicao { Alimento = queijo, QuantidadeG = 50 },
+                new ItemRefeicao { Alimento = pao, QuantidadeG = 100 },
+            ],
+        };
+
+        Assert.Equal(12.1 + 3.1, registro.TotalGordura(), precision: 6);
+        Assert.Equal(1.5 + 58.6, registro.TotalCarbo(), precision: 6);
+        Assert.Equal(11.3 + 8, registro.TotalProteina(), precision: 6);
     }
 
     [Theory]

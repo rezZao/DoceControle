@@ -162,11 +162,12 @@ public static class EndpointsIA
                 var alimento = i.AlimentoBase is { } nome ? porNome.GetValueOrDefault(Regras.Normalizar(nome)) : null;
                 // RN18: alimento não reconhecido fica sinalizado para escolha (ou criação) manual.
                 return alimento is null
-                    ? new ItemSugeridoDto(i.Descricao.Trim(), quantidade, null, null, null)
+                    ? new ItemSugeridoDto(i.Descricao.Trim(), quantidade, null, null, null, null)
                     : new ItemSugeridoDto(
                         i.Descricao.Trim(), quantidade, alimento.ParaDto(),
                         Regras.Arredondar(Regras.Nutriente(quantidade, alimento.CarboPor100g)),
-                        Regras.Arredondar(Regras.Nutriente(quantidade, alimento.ProteinaPor100g)));
+                        Regras.Arredondar(Regras.Nutriente(quantidade, alimento.ProteinaPor100g)),
+                        Regras.Arredondar(Regras.Nutriente(quantidade, alimento.GorduraPor100g)));
             })
             .ToList();
 
@@ -246,7 +247,7 @@ public static class EndpointsIA
         // alimento fica marcado como estimado pela IA.
         var proposta = new PropostaAlimentoDto(
             Limpo(estimado.Nome, 80), Limpo(estimado.Categoria, 40, "Outros"),
-            Numero(estimado.CarboPor100g, 100), Numero(estimado.ProteinaPor100g, 100),
+            Numero(estimado.CarboPor100g, 100), Numero(estimado.ProteinaPor100g, 100), Numero(estimado.GorduraPor100g, 100),
             Numero(estimado.PorcaoPadraoG, 2000) is > 0 and var porcao ? porcao : 100,
             Limpo(estimado.PorcaoDescricao, 40, "1 porção"), OrigemAlimento.IA, null,
             string.IsNullOrWhiteSpace(estimado.Observacao) ? null : Limpo(estimado.Observacao, 300));

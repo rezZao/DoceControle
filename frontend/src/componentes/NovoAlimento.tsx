@@ -32,6 +32,7 @@ export function NovoAlimento({
   const [categoria, setCategoria] = useState('')
   const [carbo, setCarbo] = useState('')
   const [proteina, setProteina] = useState('')
+  const [gordura, setGordura] = useState('')
   const [porcaoG, setPorcaoG] = useState('100')
   const [porcaoDescricao, setPorcaoDescricao] = useState('')
   const [origem, setOrigem] = useState<Envio['origem']>('Manual')
@@ -56,6 +57,7 @@ export function NovoAlimento({
     setCategoria(p.categoria)
     setCarbo(p.carboPor100g === null ? '' : String(p.carboPor100g))
     setProteina(p.proteinaPor100g === null ? '' : String(p.proteinaPor100g))
+    setGordura(p.gorduraPor100g === null ? '' : String(p.gorduraPor100g))
     setPorcaoG(String(p.porcaoPadraoG))
     setPorcaoDescricao(p.porcaoDescricao)
     setOrigem(p.origem === 'Base' ? 'Manual' : p.origem)
@@ -140,9 +142,11 @@ export function NovoAlimento({
     evento.preventDefault()
     const c = lerNumero(carbo)
     const p = lerNumero(proteina)
+    const gd = lerNumero(gordura)
     const g = lerNumero(porcaoG)
     if (nome.trim().length < 2) return setErro('Dê um nome ao alimento.')
-    if (c === null || p === null) return setErro('Informe os carboidratos e as proteínas por 100 g.')
+    if (c === null || p === null || gd === null)
+      return setErro('Informe os carboidratos, as proteínas e as gorduras por 100 g (pode ser 0).')
     if (g === null || g <= 0) return setErro('Informe a porção de referência, em gramas.')
 
     await executar('Salvando…', async () => {
@@ -152,6 +156,7 @@ export function NovoAlimento({
           categoria: categoria.trim() || null,
           carboPor100g: c,
           proteinaPor100g: p,
+          gorduraPor100g: gd,
           porcaoPadraoG: g,
           porcaoDescricao: porcaoDescricao.trim() || null,
           origem,
@@ -308,6 +313,10 @@ export function NovoAlimento({
             <label className="campo campo-curto">
               <span>Proteínas (g por 100 g)</span>
               <input inputMode="decimal" required value={proteina} onChange={(e) => setProteina(e.target.value)} />
+            </label>
+            <label className="campo campo-curto">
+              <span>Gorduras (g por 100 g)</span>
+              <input inputMode="decimal" required value={gordura} onChange={(e) => setGordura(e.target.value)} />
             </label>
           </div>
           <div className="formulario-linha">

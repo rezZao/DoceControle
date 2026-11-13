@@ -179,6 +179,10 @@ export function Refeicao() {
     (soma, i) => soma + (i.alimento ? nutriente(lerNumero(i.quantidade) ?? 0, i.alimento.proteinaPor100g) : 0),
     0,
   )
+  const totalGordura = itens.reduce(
+    (soma, i) => soma + (i.alimento ? nutriente(lerNumero(i.quantidade) ?? 0, i.alimento.gorduraPor100g) : 0),
+    0,
+  )
   const meta = metas.find((m) => m.nome === refeicao)
   const jaConsumido = meta
     ? meta.carboConsumido - (carboOriginal && carboOriginal.refeicao === refeicao ? carboOriginal.carbo : 0)
@@ -585,7 +589,7 @@ export function Refeicao() {
 
         <section className="cartao cartao-destaque" aria-live="polite">
           <p className="numero-medio">
-            {gramas(totalCarbo)} <span>de carboidratos · {gramas(totalProteina)} de proteínas</span>
+            {gramas(totalCarbo)} <span>de carboidratos · {gramas(totalProteina)} de proteínas · {gramas(totalGordura)} de gorduras</span>
           </p>
           {meta && (
             <p>

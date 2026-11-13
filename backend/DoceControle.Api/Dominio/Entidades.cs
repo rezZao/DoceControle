@@ -115,6 +115,7 @@ public class Alimento
     public string Categoria { get; set; } = "";
     public double CarboPor100g { get; set; }
     public double ProteinaPor100g { get; set; }
+    public double GorduraPor100g { get; set; }
 
     /// <summary>Porção caseira de referência, em gramas, e a sua descrição ("1 fatia").</summary>
     public double PorcaoPadraoG { get; set; }
@@ -149,6 +150,8 @@ public class RegistroRefeicao
     public double TotalCarbo() => Itens.Sum(i => i.Carbo());
 
     public double TotalProteina() => Itens.Sum(i => i.Proteina());
+
+    public double TotalGordura() => Itens.Sum(i => i.Gordura());
 }
 
 public class ItemRefeicao
@@ -165,6 +168,8 @@ public class ItemRefeicao
     public double Carbo() => Regras.Nutriente(QuantidadeG, Alimento.CarboPor100g);
 
     public double Proteina() => Regras.Nutriente(QuantidadeG, Alimento.ProteinaPor100g);
+
+    public double Gordura() => Regras.Nutriente(QuantidadeG, Alimento.GorduraPor100g);
 }
 
 public class SugestaoIA

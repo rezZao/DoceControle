@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
-import { api, mensagemDeErro, type RefeicaoDoDia, type RegistroRefeicao } from '../api'
+import { api, mensagemDeErro, type Dia, type RefeicaoDoDia, type RegistroRefeicao } from '../api'
 import { Anel, Aviso, Carregando, Icone, Medidor, Selo } from '../componentes/Base'
 import { SeloGlicemia } from '../componentes/Glicemias'
+import { iconeDaRefeicao } from '../icones'
 import { descreverLembrete, useLembretes, type EstadoLembrete } from '../componentes/Lembretes'
 import { dataIso, dataLonga, duracao, fmt, gramas, horaDe, somarDias, useDados } from '../util'
 
@@ -68,7 +69,9 @@ function ListaRegistros({ registros, aoMudar }: { registros: RegistroRefeicao[];
           <li key={r.id}>
             <div className="registro-linha">
               <span className="registro-hora">{horaDe(r.dataHora)}</span>
-              <span className="registro-texto">{r.itens.map((i) => `${i.nome} (${gramas(i.quantidadeG)})`).join(', ')}</span>
+              <span className="registro-texto registro-macros">
+                <strong>{gramas(r.totalCarbo)}</strong> carbo · {gramas(r.totalProteina)} prot. · {gramas(r.totalGordura)} gord.
+              </span>
               <span className="registro-acoes">
                 <Link className="botao-icone" to={`/refeicao/${r.id}`} aria-label={`Editar registro das ${horaDe(r.dataHora)}`}>
                   <Icone nome="lapis" />
@@ -78,9 +81,16 @@ function ListaRegistros({ registros, aoMudar }: { registros: RegistroRefeicao[];
                 </button>
               </span>
             </div>
-            <p className="registro-totais">
-              Carboidratos: <strong>{gramas(r.totalCarbo)}</strong> · Proteínas: {gramas(r.totalProteina)}
-            </p>
+            <ul className="registro-itens">
+              {r.itens.map((i, n) => (
+                <li key={`${i.alimentoId}-${n}`}>
+                  <span>
+                    {i.nome} <small>{gramas(i.quantidadeG)}</small>
+                  </span>
+                  <span className="registro-item-carbo">{gramas(i.carbo)}</span>
+                </li>
+              ))}
+            </ul>
           </li>
         ))}
       </ul>
@@ -88,28 +98,91 @@ function ListaRegistros({ registros, aoMudar }: { registros: RegistroRefeicao[];
   )
 }
 
+/** Os três macronutrientes do dia, sempre no topo. A meta de proteínas só aparece se foi informada (RN04). */
+function Macros({ dia }: { dia: Dia }) {
+  return (
+    <ul className="macros" aria-label="Macronutrientes do dia">
+      <li>
+        <span className="macro-icone" aria-hidden="true">
+          <Icone nome="carbo" />
+        </span>
+        <span className="macro-nome">Carboidratos</span>
+        <strong>
+          {fmt(dia.carboConsumido)}
+          {dia.carboLimite !== null ? <small> / {fmt(dia.carboLimite)} g</small> : ' g'}
+        </strong>
+      </li>
+      <li>
+        <span className="macro-icone" aria-hidden="true">
+          <Icone nome="proteina" />
+        </span>
+        <span className="macro-nome">Proteínas</span>
+        <strong>
+          {fmt(dia.proteinaConsumida)}
+          {dia.proteinaMeta !== null ? <small> / {fmt(dia.proteinaMeta)} g</small> : ' g'}
+        </strong>
+      </li>
+      <li>
+        <span className="macro-icone" aria-hidden="true">
+          <Icone nome="gordura" />
+        </span>
+        <span className="macro-nome">Gorduras</span>
+        <strong>{fmt(dia.gorduraConsumida)} g</strong>
+      </li>
+    </ul>
+  )
+}
+
+/**
+ * Uma refeição do dia. Os itens registrados ficam recolhidos: o cartão mostra só o resumo (carboidratos contra o
+ * limite, proteínas e gorduras) e abre ao tocar na seta.
+ */
 function LinhaRefeicao({ r, data, aoMudar }: { r: RefeicaoDoDia; data: string; aoMudar: () => void }) {
+  const [aberta, setAberta] = useState(false)
+  const idDetalhes = useId()
   const temRegistro = r.registros.length > 0
+  const itens = r.registros.reduce((soma, x) => soma + x.itens.length, 0)
   const para = `/refeicao/nova?data=${data}&refeicao=${encodeURIComponent(r.nome)}`
 
   return (
     <li className="refeicao">
       <div className="refeicao-topo">
-        <span className="refeicao-hora">{r.horario}</span>
+        <span className="refeicao-icone" aria-hidden="true">
+          <Icone nome={iconeDaRefeicao(r.nome)} />
+        </span>
         <div className="refeicao-nome">
           <h3>{r.nome}</h3>
           <p className={`refeicao-sub${r.limiteUltrapassado ? ' refeicao-sub-alerta' : ''}`}>
+            {r.horario} ·{' '}
             {r.limiteUltrapassado ? (
               <>
                 <Icone nome="alerta" tamanho={16} /> {fmt(r.carboConsumido - r.limiteCarbo)} g acima do limite
               </>
             ) : temRegistro ? (
-              `${fmt(r.carboConsumido)} de ${fmt(r.limiteCarbo)} g`
+              <>
+                <Icone nome="carbo" tamanho={16} /> {fmt(r.carboConsumido)} de {fmt(r.limiteCarbo)} g
+                <span className="so-leitor"> de carboidratos</span>
+              </>
             ) : (
-              `até ${fmt(r.limiteCarbo)} g`
+              <>
+                <Icone nome="carbo" tamanho={16} /> até {fmt(r.limiteCarbo)} g
+                <span className="so-leitor"> de carboidratos</span>
+              </>
             )}
           </p>
         </div>
+        {temRegistro && (
+          <button
+            type="button"
+            className="botao-icone"
+            aria-expanded={aberta}
+            aria-controls={idDetalhes}
+            aria-label={`${aberta ? 'Recolher' : 'Ver'} ${itens === 1 ? 'o item' : `os ${itens} itens`} de ${r.nome}`}
+            onClick={() => setAberta((v) => !v)}
+          >
+            <Icone nome={aberta ? 'recolher' : 'expandir'} />
+          </button>
+        )}
         <Link className="botao-redondo" to={para} aria-label={`Registrar ${r.nome}`}>
           <Icone nome="mais" />
         </Link>
@@ -117,7 +190,17 @@ function LinhaRefeicao({ r, data, aoMudar }: { r: RefeicaoDoDia; data: string; a
       {temRegistro && (
         <>
           <Medidor rotulo={`Carboidratos de ${r.nome}`} valor={r.carboConsumido} limite={r.limiteCarbo} fino />
-          <ListaRegistros registros={r.registros} aoMudar={aoMudar} />
+          <p className="refeicao-macros">
+            <span>
+              <Icone nome="proteina" tamanho={18} /> <span className="so-leitor">Proteínas:</span> {fmt(r.proteinaConsumida)} g
+            </span>
+            <span>
+              <Icone nome="gordura" tamanho={18} /> <span className="so-leitor">Gorduras:</span> {fmt(r.gorduraConsumida)} g
+            </span>
+          </p>
+          <div id={idDetalhes} hidden={!aberta}>
+            <ListaRegistros registros={r.registros} aoMudar={aoMudar} />
+          </div>
         </>
       )}
     </li>
@@ -254,11 +337,7 @@ export function Painel() {
           <Link className="botao" to="/prescricao">
             Registrar a prescrição
           </Link>
-          {dia.carboConsumido > 0 && (
-            <p>
-              Consumo registrado: <strong>{gramas(dia.carboConsumido)}</strong> de carboidratos.
-            </p>
-          )}
+          {(dia.carboConsumido > 0 || dia.proteinaConsumida > 0 || dia.gorduraConsumida > 0) && <Macros dia={dia} />}
         </section>
       ) : (
         <section className="cartao hero" aria-labelledby="titulo-carbo">
@@ -266,25 +345,7 @@ export function Painel() {
             Carboidratos do dia
           </h2>
           <Anel rotulo="Carboidratos do dia" valor={dia.carboConsumido} limite={dia.carboLimite ?? 0} />
-          <dl className="hero-numeros">
-            <div>
-              <dt>Consumido</dt>
-              <dd>{gramas(dia.carboConsumido)}</dd>
-            </div>
-            <div>
-              <dt>Limite</dt>
-              <dd>{gramas(dia.carboLimite ?? 0)}</dd>
-            </div>
-            <div>
-              <dt>Proteínas</dt>
-              <dd>
-                {fmt(dia.proteinaConsumida)}
-                {/* RN04: a meta só aparece quando foi informada. */}
-                {dia.proteinaMeta !== null && <small> / {fmt(dia.proteinaMeta)} g</small>}
-                {dia.proteinaMeta === null && ' g'}
-              </dd>
-            </div>
-          </dl>
+          <Macros dia={dia} />
         </section>
       )}
 

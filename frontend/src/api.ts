@@ -83,6 +83,7 @@ export interface Alimento {
   categoria: string
   carboPor100g: number
   proteinaPor100g: number
+  gorduraPor100g: number
   porcaoPadraoG: number
   porcaoDescricao: string
   origem: OrigemAlimento
@@ -96,6 +97,7 @@ export interface NovoAlimento {
   categoria: string | null
   carboPor100g: number
   proteinaPor100g: number
+  gorduraPor100g: number
   porcaoPadraoG: number
   porcaoDescricao: string | null
   origem: Exclude<OrigemAlimento, 'Base'>
@@ -108,6 +110,7 @@ export interface PropostaAlimento {
   categoria: string
   carboPor100g: number | null
   proteinaPor100g: number | null
+  gorduraPor100g: number | null
   porcaoPadraoG: number
   porcaoDescricao: string
   origem: OrigemAlimento
@@ -147,6 +150,7 @@ export interface ItemRegistro {
   quantidadeG: number
   carbo: number
   proteina: number
+  gordura: number
   daIA: boolean
 }
 
@@ -156,6 +160,7 @@ export interface RegistroRefeicao {
   refeicao: string
   totalCarbo: number
   totalProteina: number
+  totalGordura: number
   itens: ItemRegistro[]
 }
 
@@ -195,6 +200,7 @@ export interface RefeicaoDoDia {
   metaProteina: number | null
   carboConsumido: number
   proteinaConsumida: number
+  gorduraConsumida: number
   carboRestante: number
   limiteUltrapassado: boolean
   registros: RegistroRefeicao[]
@@ -210,6 +216,7 @@ export interface Dia {
   limiteUltrapassado: boolean
   proteinaConsumida: number
   proteinaMeta: number | null
+  gorduraConsumida: number
   refeicoes: RefeicaoDoDia[]
   outrosRegistros: RegistroRefeicao[]
   glicemias: Glicemia[]
@@ -223,6 +230,7 @@ export interface DiaHistorico {
   limiteUltrapassado: boolean
   proteinaConsumida: number
   proteinaMeta: number | null
+  gorduraConsumida: number
   refeicoes: number
   medicoes: number
   glicemiaMin: number | null
@@ -256,6 +264,7 @@ export interface ItemSugerido {
   alimento: Alimento | null
   carbo: number | null
   proteina: number | null
+  gordura: number | null
 }
 
 export interface Sugestao {
