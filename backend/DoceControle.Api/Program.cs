@@ -6,6 +6,7 @@ using DoceControle.Api.Endpoints;
 using DoceControle.Api.Servicos;
 using DoceControle.Api.Servicos.IA;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -32,13 +33,19 @@ builder.Configuration.AddJsonFile(Path.Combine(pastaDoUsuario, "appsettings.Loca
 var hospedagemLocal = config.GetValue("Hospedagem:Local", true);
 var abrirNavegador = config.GetValue("Hospedagem:AbrirNavegador", !emDesenvolvimento);
 
-// Fora do desenvolvimento, o banco vai para a pasta do usuário (em desenvolvimento, continua na pasta do projeto).
+// O banco fica na pasta do usuário tanto no programa (.exe) quanto em "dotnet run": as contas valem nos dois.
+// (Antes, cada modo tinha o seu banco, e uma conta criada em um não existia no outro.) Para usar outro banco,
+// defina ConnectionStrings:Padrao com outro caminho.
+Directory.CreateDirectory(pastaDoUsuario);
 var textoConexao = config.GetConnectionString("Padrao") ?? "Data Source=dococontrole.db";
-if (!emDesenvolvimento && textoConexao == "Data Source=dococontrole.db")
-{
-    Directory.CreateDirectory(pastaDoUsuario);
+if (textoConexao == "Data Source=dococontrole.db")
     textoConexao = $"Data Source={Path.Combine(pastaDoUsuario, "dococontrole.db")}";
-}
+
+// Cookie de login: nome da aplicação e chaves fixos, para valer em qualquer cópia do programa (outra porta,
+// outra pasta, .exe ou dotnet run). Sem isso, cada cópia invalidava o login da outra.
+builder.Services.AddDataProtection()
+    .SetApplicationName("DoceControle")
+    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(pastaDoUsuario, "chaves")));
 
 // Sem endereço definido (--urls ou ASPNETCORE_URLS), usa a primeira porta livre a partir da 5187.
 if (string.IsNullOrWhiteSpace(config["urls"]))
