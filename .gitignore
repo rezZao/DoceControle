@@ -27,3 +27,6 @@ backend/DoceControle.Api/wwwroot/
 .DS_Store
 Thumbs.db
 .idea/
+
+# Programa gerado por publicar.ps1
+dist/

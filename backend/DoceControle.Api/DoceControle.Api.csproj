@@ -4,6 +4,10 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>DoceControle.Api</RootNamespace>
+    <!-- O programa gerado se chama DoceControle.exe e usa o ícone da marca. -->
+    <AssemblyName>DoceControle</AssemblyName>
+    <ApplicationIcon>icone.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

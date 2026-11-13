@@ -29,6 +29,26 @@ Testes: `dotnet test` na raiz.
 > No Windows, mantenha o projeto em um caminho curto (ex.: `C:\Projetos\DoceControle`):
 > caminhos muito longos passam do limite de 260 caracteres na compilação.
 
+## Programa para Windows (versão de teste)
+
+Para abrir com um clique, sem terminal e sem ter o .NET instalado, gere o `DoceControle.exe` no PowerShell,
+na raiz do projeto:
+
+```powershell
+.\publicar.ps1            # gera dist\DoceControle\DoceControle.exe
+.\publicar.ps1 -Atalho    # e também cria um atalho na Área de Trabalho
+```
+
+Ao abrir o `.exe`, o servidor sobe numa janela de texto e o navegador abre sozinho (a porta é a primeira livre a
+partir da 5187). Para encerrar, feche a janela. Os dados ficam em `%LOCALAPPDATA%\DoceControle`, fora da pasta do
+programa: sobrevivem a trocar o `.exe`. A chave da IA vai em `%LOCALAPPDATA%\DoceControle\appsettings.Local.json`
+(veja o `LEIA-ME.txt` gerado junto).
+
+Este programa é **só para a fase de teste**: roda neste computador, em HTTP no localhost, sem assinatura digital
+(o Windows pode avisar "O Windows protegeu o computador": *Mais informações* > *Executar assim mesmo*) e sem
+instalador. O modo local desliga o HTTPS (`Hospedagem:Local`); qualquer uso fora deste computador exige HTTPS e
+`Hospedagem:Local=false`.
+
 ## IA
 
 A IA usa **somente um provedor real**: Claude, pela API da Anthropic (SDK oficial para C#). Não existe modo
@@ -41,7 +61,8 @@ Para ativar, defina a chave **fora do repositório**:
 $env:ANTHROPIC_API_KEY = "sua-chave"
 ```
 
-ou use `IA:ChaveApi` em um `appsettings.Local.json` (ignorado pelo Git). Nunca coloque a chave em arquivo versionado.
+ou use `IA:ChaveApi` em um `appsettings.Local.json`, ao lado do programa ou em `%LOCALAPPDATA%\DoceControle`
+(ignorado pelo Git). Nunca coloque a chave em arquivo versionado.
 
 O que a IA faz (sempre com consentimento da conta e limite diário de usos):
 
