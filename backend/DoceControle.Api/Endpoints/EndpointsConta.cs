@@ -96,11 +96,8 @@ public static class EndpointsConta
         return Results.Ok();
     }
 
-    private static async Task<IResult> Sair(HttpContext http)
-    {
-        await http.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return Results.Ok();
-    }
+    private static Task Sair(HttpContext http) =>
+        http.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
     private static async Task<IResult> Obter(
         ClaimsPrincipal principal, BancoDeDados db, IServicoIA ia, IProvedorPagamento pagamento,
