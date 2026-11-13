@@ -1,0 +1,29 @@
+# .NET
+bin/
+obj/
+TestResults/
+*.user
+.vs/
+
+# Banco de dados local (dados de saúde: nunca vão para o repositório)
+*.db
+*.db-shm
+*.db-wal
+
+# Segredos e configuração local (a chave da IA vai em variável de ambiente ou em arquivo local)
+.env
+.env.*
+appsettings.Local.json
+appsettings.*.local.json
+
+# Frontend
+node_modules/
+frontend/dist/
+
+# Site compilado (gerado por "npm run build" em frontend)
+backend/DoceControle.Api/wwwroot/
+
+# Sistema e editores
+.DS_Store
+Thumbs.db
+.idea/
