@@ -177,5 +177,3 @@ static int PortaLivre(int inicial)
     }
     return inicial;
 }
-
-public partial class Program;

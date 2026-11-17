@@ -1,6 +1,5 @@
 <Solution>
   <Folder Name="/backend/">
     <Project Path="backend/DoceControle.Api/DoceControle.Api.csproj" />
-    <Project Path="backend/DoceControle.Testes/DoceControle.Testes.csproj" />
   </Folder>
 </Solution>

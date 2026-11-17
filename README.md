@@ -9,7 +9,6 @@ O site não substitui a orientação médica e não calcula nem sugere dose de i
 
 - Backend: C# com ASP.NET Core 10, EF Core e SQLite (`backend/DoceControle.Api`)
 - Frontend: TypeScript com React e Vite (`frontend`)
-- Testes: xUnit (`backend/DoceControle.Testes`)
 
 ## Como rodar
 
@@ -25,8 +24,6 @@ O site abre em http://localhost:5187. O build do frontend vai para `backend/Doce
 
 Para mexer no frontend com recarga automática, deixe a API rodando e, em outro terminal, rode
 `npm --prefix frontend run dev` (http://localhost:5173, com `/api` apontando para a API).
-
-Os testes rodam com `dotnet test`.
 
 No Windows, deixe o projeto num caminho curto (como `C:\Projetos\DoceControle`), porque caminhos muito longos
 passam do limite de 260 caracteres na compilação.
