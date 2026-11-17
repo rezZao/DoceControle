@@ -51,13 +51,8 @@ public static class Conversoes
         string.Equals(Regras.Normalizar(a), Regras.Normalizar(b), StringComparison.Ordinal);
 }
 
-/// <summary>
-/// Monta a visão de um dia (painel e dieta), o histórico e o relatório.
-/// Só usa regras fixas: a IA não participa de nada aqui (RN21).
-/// </summary>
 public class ServicoDia(BancoDeDados db)
 {
-    /// <summary>RN13: vale a prescrição mais recente cuja vigência começou até a data consultada.</summary>
     public static Prescricao? Vigente(IEnumerable<Prescricao> prescricoes, DateOnly data) =>
         prescricoes
             .Where(p => p.VigenteDesde <= data)
@@ -102,7 +97,6 @@ public class ServicoDia(BancoDeDados db)
         var gordura = registros.Sum(r => r.TotalGordura());
         var glicemiasDto = glicemias.Select(g => g.ParaDto(prescricao)).ToList();
 
-        // RN02: sem prescrição a dieta não é gerada; o painel mostra só o consumo.
         if (prescricao is null)
         {
             return new DiaDto(
@@ -141,7 +135,6 @@ public class ServicoDia(BancoDeDados db)
             refeicoes, outros, glicemiasDto, Textos.NaoSubstituiOrientacao);
     }
 
-    /// <summary>RN07: avisos de limite ultrapassado depois de gravar. Nunca bloqueiam o registro.</summary>
     public async Task<List<string>> AvisosDeLimiteAsync(int usuarioId, RegistroRefeicao registro)
     {
         var dia = await MontarDiaAsync(usuarioId, DateOnly.FromDateTime(registro.DataHora));
@@ -171,7 +164,6 @@ public class ServicoDia(BancoDeDados db)
         var dias = new List<DiaHistoricoDto>();
         for (var dia = de; dia <= ate; dia = dia.AddDays(1))
         {
-            // RN13: cada dia é comparado com os limites vigentes naquela data.
             var vigente = Vigente(prescricoes, dia);
             var carbo = Regras.Arredondar(refeicoes[dia].Sum(r => r.TotalCarbo()));
             var valores = glicemias[dia].Select(g => g.Valor).ToList();

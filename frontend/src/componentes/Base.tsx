@@ -4,7 +4,6 @@ import { fmt } from '../util'
 
 export type { NomeIcone }
 
-/** Ícone decorativo (Google Material Symbols): o significado vem sempre do texto ao lado. */
 export function Icone({ nome, tamanho = 22 }: { nome: NomeIcone; tamanho?: number }) {
   return (
     <svg
@@ -25,7 +24,6 @@ export function Icone({ nome, tamanho = 22 }: { nome: NomeIcone; tamanho?: numbe
 
 type TipoAviso = 'info' | 'alerta' | 'erro' | 'ok'
 
-/** Mensagem destacada. Erros e alertas são anunciados por leitores de tela. */
 export function Aviso({ tipo = 'info', titulo, children }: { tipo?: TipoAviso; titulo?: string; children: ReactNode }) {
   const urgente = tipo === 'erro' || tipo === 'alerta'
   return (
@@ -47,7 +45,6 @@ export function Carregando({ texto = 'Carregando…' }: { texto?: string }) {
   )
 }
 
-/** RN15: aviso de que o site não substitui a orientação médica. */
 export function Orientacao({ texto }: { texto: string }) {
   return (
     <p className="orientacao">
@@ -57,10 +54,6 @@ export function Orientacao({ texto }: { texto: string }) {
   )
 }
 
-/**
- * Medidor de consumo em relação a um limite (RF08).
- * Passar do limite muda a cor e também mostra ícone e texto: nunca só a cor.
- */
 export function Medidor({
   rotulo,
   valor,
@@ -72,7 +65,6 @@ export function Medidor({
   valor: number
   limite: number
   grande?: boolean
-  /** Barra fina, sem legenda: o texto ao lado já diz o valor. */
   fino?: boolean
 }) {
   const passou = valor > limite
@@ -111,10 +103,6 @@ export function Medidor({
   )
 }
 
-/**
- * Anel de progresso: o número em destaque é o que ainda resta do limite.
- * Passando do limite, o anel fica vermelho e o centro mostra quanto passou, com ícone e texto.
- */
 export function Anel({ rotulo, valor, limite }: { rotulo: string; valor: number; limite: number }) {
   const passou = valor > limite
   const raio = 52

@@ -20,7 +20,6 @@ export function SeloGlicemia({ glicemia }: { glicemia: Glicemia }) {
   )
 }
 
-/** RF07: registrar a glicemia medida. RF09/RN08: fora da faixa, mostra o aviso de texto fixo. */
 export function FormularioGlicemia({
   edicao,
   aoGravar,

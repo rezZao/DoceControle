@@ -4,9 +4,7 @@ import { api, mensagemDeErro, type Jejum, type Lembrete } from '../api'
 import { dataHoraLocal, dataIso, duracao, fmt } from '../util'
 import { Icone } from './Base'
 
-// Lembretes de insulina (RF10, RN09). Tocam com a página aberta e, se o navegador permitir,
-// também por notificação (RNF08). Todo alerta sonoro tem equivalente visual (RN11, RI08).
-// A dose mostrada é só a informada pelo usuário: nada aqui calcula dose (RN10, RI01).
+// lembretes de insulina e tempo máximo sem comer: tocam com a página aberta e, se o navegador permitir, por notificação
 
 const JANELA_MIN = 180 // depois de 3 horas o lembrete deixa de tocar e fica como "não confirmado"
 const ADIAR_MIN = 10
@@ -15,7 +13,6 @@ export type EstadoLembrete = 'confirmado' | 'tocando' | 'adiado' | 'atrasado' | 
 
 interface ContextoLembretes {
   lembretes: Lembrete[]
-  /** Tempo desde a última refeição em relação ao máximo orientado pelo médico. */
   jejum: Jejum | null
   estadoDe: (lembrete: Lembrete) => EstadoLembrete
   confirmar: (id: number) => Promise<void>
@@ -142,7 +139,6 @@ export function ProvedorLembretes({ children }: { children: ReactNode }) {
 
   const tocando = lembretes.filter((l) => estadoDe(l) === 'tocando')
 
-  // RN09: repete no intervalo configurado (padrão de 5 minutos) até confirmar ou adiar.
   useEffect(() => {
     const momento = agora.getTime()
     for (const l of tocando) {
@@ -169,8 +165,7 @@ export function ProvedorLembretes({ children }: { children: ReactNode }) {
     if (somLiberado && haTocando) tocarSom()
   }, [somLiberado, haTocando, tocarSom])
 
-  // Tempo máximo sem comer: ao passar do limite, avisa uma vez com som, notificação (se permitida) e a faixa
-  // no topo. Registrar uma refeição zera a contagem e rearma o aviso.
+  // passou do tempo sem comer: avisa uma vez (som, notificação e faixa no topo); registrar uma refeição zera a contagem
   const jejumExcedido = jejum?.estado === 'Excedido'
   useEffect(() => {
     if (!jejumExcedido) {
@@ -189,13 +184,12 @@ export function ProvedorLembretes({ children }: { children: ReactNode }) {
     }
   }, [jejumExcedido, jejum?.aviso, tocarSom, notificacoes])
 
-  // Equivalente visual também na aba do navegador.
   useEffect(() => {
     document.title =
       tocando.length > 0
-        ? '🔔 Hora da insulina — DoceControle'
+        ? 'Hora da insulina - DoceControle'
         : jejumExcedido
-          ? '⏰ Tempo sem comer — DoceControle'
+          ? 'Tempo sem comer - DoceControle'
           : 'DoceControle'
   }, [tocando.length, jejumExcedido])
 

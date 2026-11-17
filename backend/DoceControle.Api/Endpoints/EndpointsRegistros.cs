@@ -26,7 +26,6 @@ public static class EndpointsRegistros
         glicemias.MapDelete("/{id:int}", ExcluirGlicemia);
     }
 
-    // RF04 / RF08: dieta e painel do dia.
     private static async Task<IResult> ObterDia(ClaimsPrincipal principal, ServicoDia servico, string? data)
     {
         var dia = Formatos.LerData(data, out var d) ? d : Formatos.Hoje();
@@ -39,7 +38,6 @@ public static class EndpointsRegistros
         return (fim.AddDays(-(Math.Clamp(dias ?? 7, 1, 90) - 1)), fim);
     }
 
-    // RF11: histórico diário e semanal.
     private static async Task<IResult> ObterHistorico(
         ClaimsPrincipal principal, ServicoDia servico, string? ate, int? dias)
     {
@@ -47,7 +45,6 @@ public static class EndpointsRegistros
         return Results.Ok(await servico.HistoricoAsync(principal.UsuarioId(), de, fim));
     }
 
-    // RF13: dados do relatório para levar à consulta.
     private static async Task<IResult> ObterRelatorio(
         ClaimsPrincipal principal, ServicoDia servico, BancoDeDados db, string? ate, int? dias)
     {
@@ -55,8 +52,6 @@ public static class EndpointsRegistros
         var usuario = await db.Usuarios.AsNoTracking().FirstAsync(u => u.Id == principal.UsuarioId());
         return Results.Ok(await servico.RelatorioAsync(usuario, de, fim));
     }
-
-    // Refeições (RF06, RF12)
 
     private static IQueryable<RegistroRefeicao> ComItens(BancoDeDados db) =>
         db.Refeicoes.Include(r => r.Itens).ThenInclude(i => i.Alimento);
@@ -72,7 +67,6 @@ public static class EndpointsRegistros
     private static bool DataHoraValida(DateTime dataHora) =>
         dataHora.Year >= 2000 && dataHora <= DateTime.Now.AddDays(2);
 
-    /// <summary>Valida e monta os itens. Os nutrientes saem sempre da base de alimentos (RN06, RI11).</summary>
     private static async Task<(IResult? Erro, List<ItemRefeicao> Itens)> MontarItensAsync(
         RefeicaoReq req, BancoDeDados db, int? sugestaoId)
     {
@@ -103,7 +97,6 @@ public static class EndpointsRegistros
     {
         var usuarioId = principal.UsuarioId();
 
-        // RN17: a sugestão da IA só vira registro aqui, quando o usuário confirma.
         SugestaoIA? sugestao = null;
         if (req.SugestaoId is { } sugestaoId)
         {
@@ -123,7 +116,6 @@ public static class EndpointsRegistros
         db.Refeicoes.Add(registro);
         await db.SaveChangesAsync();
 
-        // RN07: o registro reflete o que foi comido. Passar do limite avisa, mas nunca bloqueia.
         return Results.Ok(new RefeicaoGravadaDto(registro.ParaDto(), await servico.AvisosDeLimiteAsync(usuarioId, registro)));
     }
 
@@ -154,8 +146,6 @@ public static class EndpointsRegistros
         return apagados == 0 ? Results.NotFound() : Results.Ok();
     }
 
-    // Glicemia (RF07, RF09, RF12)
-
     private static IResult? Validar(GlicemiaReq req)
     {
         if (req.Valor is < 10 or > 1000) return Erro.Invalido("Informe a glicemia em mg/dL (entre 10 e 1000).");
@@ -173,7 +163,6 @@ public static class EndpointsRegistros
         db.Glicemias.Add(registro);
         await db.SaveChangesAsync();
 
-        // RN08: fora da faixa prescrita, a resposta leva o aviso de texto fixo.
         var vigente = await servico.VigenteAsync(usuarioId, DateOnly.FromDateTime(req.DataHora));
         return Results.Ok(registro.ParaDto(vigente));
     }

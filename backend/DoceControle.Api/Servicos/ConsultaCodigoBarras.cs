@@ -7,21 +7,14 @@ public record ProdutoCodigo(
     string Nome, double? CarboPor100g, double? ProteinaPor100g, double? GorduraPor100g, double? PorcaoG,
     string? PorcaoDescricao);
 
-/// <summary>A consulta não pôde ser feita (sem internet, serviço fora do ar). O cadastro manual segue disponível.</summary>
 public class ConsultaCodigoIndisponivelException(string mensagem, Exception? causa = null) : Exception(mensagem, causa);
 
-/// <summary>Procura os dados de um produto pelo código de barras em uma base pública.</summary>
 public interface IConsultaCodigoBarras
 {
-    /// <summary>Devolve nulo quando o produto não existe na base.</summary>
     Task<ProdutoCodigo?> ConsultarAsync(string codigo, CancellationToken ct);
 }
 
-/// <summary>
-/// Open Food Facts: base colaborativa e aberta de produtos. Só o número do código sai do servidor:
-/// nenhum dado do usuário acompanha a consulta, nem o endereço dele, já que quem consulta é o servidor.
-/// Por ser colaborativa, os valores podem estar errados: o usuário confere antes de salvar.
-/// </summary>
+// Open Food Facts: só o número do código sai do servidor; os valores são colaborativos, o usuário confere
 public class ConsultaOpenFoodFacts(HttpClient http, ILogger<ConsultaOpenFoodFacts> log) : IConsultaCodigoBarras
 {
     public async Task<ProdutoCodigo?> ConsultarAsync(string codigo, CancellationToken ct)
@@ -78,7 +71,6 @@ public class ConsultaOpenFoodFacts(HttpClient http, ILogger<ConsultaOpenFoodFact
             ? v.GetString()!.Trim()
             : null;
 
-    /// <summary>A base mistura números e textos; aceita os dois.</summary>
     private static double? Numero(JsonElement e, string nome)
     {
         if (!e.TryGetProperty(nome, out var v)) return null;

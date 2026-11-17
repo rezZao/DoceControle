@@ -2,9 +2,7 @@ import { useState, type ReactNode } from 'react'
 import type { DiaHistorico } from '../api'
 import { dataCurta, diaDaSemana, fmt } from '../util'
 
-// Gráficos do histórico (RF11). Cada gráfico tem um só eixo, dica ao passar o mouse ou focar,
-// e a mesma informação em tabela logo abaixo, na tela de histórico.
-// Passar do limite nunca depende só da cor: a legenda, a dica e a tabela dizem o mesmo em texto.
+// gráficos do histórico, com a mesma informação em tabela logo abaixo
 
 const L = 640
 const A = 230
@@ -12,7 +10,6 @@ const M = { esq: 40, dir: 12, topo: 26, base: 34 }
 const AREA_L = L - M.esq - M.dir
 const AREA_A = A - M.topo - M.base
 
-/** Arredonda o topo do eixo para um número "limpo". */
 function topoLimpo(valor: number): number {
   if (valor <= 0) return 10
   const passo = Math.pow(10, Math.floor(Math.log10(valor)))
@@ -81,7 +78,6 @@ function Moldura({
                   {dataCurta(d.data)}
                 </text>
               )}
-              {/* Área de toque maior que a marca, também alcançável pelo teclado. */}
               <rect
                 className="grafico-toque"
                 x={M.esq + faixa * i}
@@ -116,7 +112,6 @@ function Moldura({
   )
 }
 
-/** Colunas de carboidratos por dia, com o limite vigente em cada data (RN13). */
 export function GraficoCarbo({ dias }: { dias: DiaHistorico[] }) {
   const maior = Math.max(...dias.map((d) => Math.max(d.carboConsumido, d.carboLimite ?? 0)), 1)
   const topo = topoLimpo(maior * 1.05)
@@ -179,7 +174,6 @@ export function GraficoCarbo({ dias }: { dias: DiaHistorico[] }) {
   )
 }
 
-/** Glicemia por dia: mínima, máxima e média, sobre a faixa prescrita. */
 export function GraficoGlicemia({ dias }: { dias: DiaHistorico[] }) {
   const comMedicao = dias.filter((d) => d.medicoes > 0)
   if (comMedicao.length === 0) return null

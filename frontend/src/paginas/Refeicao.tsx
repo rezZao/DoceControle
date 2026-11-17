@@ -5,12 +5,24 @@ import { lerCodigoDeBarras } from '../codigoDeBarras'
 import { Aviso, Carregando, Icone, Selo } from '../componentes/Base'
 import { NovoAlimento } from '../componentes/NovoAlimento'
 import { useConta, useContaAtiva } from '../conta'
-import { dataHoraLocal, dataIso, fmt, gramas, lerNumero, nutriente, paraApi, prepararFoto, rolarPara, useDados } from '../util'
+import {
+  dataHoraLocal,
+  dataIso,
+  fmt,
+  gramas,
+  lerNumero,
+  nutriente,
+  paraApi,
+  prepararFoto,
+  rolarPara,
+  textoUsosDaIA,
+  useDados,
+  usosRestantesDaIA,
+} from '../util'
 
 interface ItemEdicao {
   chave: number
   alimento: Alimento | null
-  /** Como a IA descreveu o alimento (usado quando ela não achou correspondência na base). */
   descricao: string | null
   quantidade: string
   daIA: boolean
@@ -26,7 +38,6 @@ const semAcento = (texto: string) =>
 
 let proximaChave = 1
 
-/** RF05: busca na base de alimentos (incluída sempre que uma refeição é registrada). */
 function BuscaAlimento({
   base,
   rotulo,
@@ -37,7 +48,6 @@ function BuscaAlimento({
   base: Alimento[]
   rotulo: string
   aoEscolher: (alimento: Alimento) => void
-  /** Abre o cadastro de um alimento novo, com o que foi digitado na busca. */
   aoCriar: (nome: string) => void
   inicial?: string
 }) {
@@ -91,7 +101,6 @@ function BuscaAlimento({
   )
 }
 
-// RF06 (manual), RF15 e RF16 (IA por texto, com confirmação), RF17 (foto, premium), RF18 (manual sempre disponível).
 export function Refeicao() {
   const { id } = useParams()
   const idEdicao = id ? Number(id) : null
@@ -110,7 +119,6 @@ export function Refeicao() {
     nome: string
     chave: number | null
     proposta?: PropostaAlimento
-    /** Muda a cada pedido, para reabrir (e rolar até) o painel mesmo que ele já esteja aberto. */
     pedido: number
   } | null>(null)
   const [extras, setExtras] = useState<Alimento[]>([])
@@ -132,7 +140,6 @@ export function Refeicao() {
     [idEdicao],
   )
 
-  // Edição (RF12): carrega o registro existente.
   useEffect(() => {
     if (!registro || !base) return
     const porId = new Map(base.map((a) => [a.id, a]))
@@ -222,7 +229,6 @@ export function Refeicao() {
 
   function receberSugestao(nova: Sugestao) {
     setSugestao(nova)
-    // RN17: a sugestão entra na tela marcada como estimativa; só é gravada quando o usuário confirmar.
     setItens((lista) => [
       ...lista.filter((i) => !i.daIA),
       ...nova.itens.map((i) => ({
@@ -242,7 +248,6 @@ export function Refeicao() {
   }
 
   function tratarErroIA(e: unknown) {
-    // RN19: se a IA falhar ou o limite diário acabar, o registro manual continua disponível.
     setAvisoIA(mensagemDeErro(e))
     if (e instanceof ErroApi && (e.codigo === 'ia_indisponivel' || e.codigo === 'limite_diario')) setModo('manual')
   }
@@ -285,8 +290,6 @@ export function Refeicao() {
           if (!seguir) throw e
         }
       }
-      // 2) Sem código (ou produto desconhecido): a IA identifica os alimentos. A foto é reduzida e
-      // reencodada aqui, sem metadados, e não fica guardada (RN22).
       receberSugestao(await api.sugerirPorFoto(await prepararFoto(arquivo)))
     } catch (e) {
       tratarErroIA(e)
@@ -338,7 +341,7 @@ export function Refeicao() {
     }
   }
 
-  const usosRestantes = Math.max(0, conta.ia.limiteDiario - conta.ia.usosHoje)
+  const usosRestantes = usosRestantesDaIA(conta.ia)
 
   return (
     <>
@@ -402,7 +405,6 @@ export function Refeicao() {
           )}
 
           {modo !== 'manual' && conta.ia.configurada && !conta.ia.consentida && (
-            // RN20: sem o consentimento específico, o registro por IA fica desativado.
             <Aviso tipo="info" titulo="O registro com IA está desativado">
               Para usar, é preciso consentir com o envio do conteúdo da refeição à IA.{' '}
               <Link to="/conta">Ativar na sua conta</Link>. O registro manual continua disponível.
@@ -426,14 +428,13 @@ export function Refeicao() {
                   {analisando ? 'Identificando…' : 'Identificar alimentos'}
                 </button>
                 <span className="texto-apoio">
-                  {usosRestantes} de {conta.ia.limiteDiario} usos restantes hoje
+                  {textoUsosDaIA(conta.ia)}
                 </span>
               </div>
             </form>
           )}
 
           {modo === 'foto' && conta.ia.configurada && conta.ia.consentida && (
-            // RF20 / RN23: a foto é exclusiva do plano premium; o texto segue gratuito.
             <>
               {!conta.ia.fotoLiberada ? (
                 <Aviso tipo="info" titulo="O registro por foto faz parte do plano premium">
@@ -456,7 +457,7 @@ export function Refeicao() {
                     {analisando
                       ? 'Identificando os alimentos…'
                       : 'Se a foto tiver um código de barras, ele é lido no seu aparelho e o produto é buscado pelo número. Senão, a IA identifica os alimentos. A foto é enviada sem dados de localização e não fica guardada.'}{' '}
-                    {usosRestantes} de {conta.ia.limiteDiario} usos restantes hoje.
+                    {textoUsosDaIA(conta.ia)}
                   </p>
                 </div>
               )}
@@ -479,7 +480,6 @@ export function Refeicao() {
           <h2 id="titulo-itens">Alimentos desta refeição</h2>
 
           {sugestao && itens.some((i) => i.daIA) && (
-            // RNF12: tudo o que veio da IA e ainda não foi confirmado fica identificado.
             <div className="faixa-ia">
               <p>
                 <Selo tipo="ia">Estimativa da IA</Selo> Confira cada alimento e cada quantidade. Nada foi gravado ainda.
@@ -537,7 +537,6 @@ export function Refeicao() {
                       </div>
                     </>
                   ) : (
-                    // RN18: alimento que a IA não reconheceu é sinalizado e o usuário escolhe manualmente.
                     <>
                       <div className="item-topo">
                         <span>
@@ -597,7 +596,6 @@ export function Refeicao() {
             </p>
           )}
           {meta && excesso > 0.05 && (
-            // RN07: passar do limite avisa, mas nunca bloqueia o registro.
             <Aviso tipo="alerta" titulo={`Passa do limite desta refeição em ${fmt(excesso)} g`}>
               Você pode gravar mesmo assim: o registro mostra o que foi comido.
             </Aviso>

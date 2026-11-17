@@ -20,7 +20,6 @@ public class BancoDeDados(DbContextOptions<BancoDeDados> opcoes) : DbContext(opc
 
     protected override void OnModelCreating(ModelBuilder m)
     {
-        // Excluir o usuário exclui todos os dados dele (RF14, RN14).
         m.Entity<Usuario>(e =>
         {
             e.HasIndex(u => u.Email).IsUnique();
@@ -62,7 +61,6 @@ public class BancoDeDados(DbContextOptions<BancoDeDados> opcoes) : DbContext(opc
         {
             e.HasIndex(a => a.NomeBusca);
             e.HasIndex(a => a.CodigoBarras);
-            // Alimentos criados pelo usuário saem junto com a conta (RF14).
             e.HasOne<Usuario>().WithMany().HasForeignKey(a => a.UsuarioId).OnDelete(DeleteBehavior.Cascade);
         });
     }
@@ -74,10 +72,7 @@ public static class CargaInicial
         string Nome, string Categoria, double Carbo, double Proteina, double Gordura, double PorcaoG, string Porcao,
         string Tipos);
 
-    /// <summary>
-    /// O banco é criado com EnsureCreated, que não altera tabelas já existentes. Para não perder os dados de
-    /// quem já usa o site, as colunas novas são acrescentadas aqui. Uma versão comercial deve usar migrações do EF.
-    /// </summary>
+    // EnsureCreated não altera tabelas que já existem, então as colunas novas entram aqui (o ideal seria usar migrations)
     private static async Task AtualizarEsquemaAsync(BancoDeDados db)
     {
         (string Tabela, string Coluna, string Definicao)[] novas =
@@ -95,7 +90,6 @@ public static class CargaInicial
                 .SqlQueryRaw<string>("SELECT name AS Value FROM pragma_table_info({0})", tabela)
                 .ToListAsync();
             if (existentes.Contains(coluna)) continue;
-            // Nomes de tabela e coluna não podem ser parâmetros em DDL; vêm só da lista fixa acima, nunca do usuário.
 #pragma warning disable EF1002
             await db.Database.ExecuteSqlRawAsync($"ALTER TABLE {tabela} ADD COLUMN {coluna} {definicao}");
 #pragma warning restore EF1002
@@ -104,7 +98,6 @@ public static class CargaInicial
             "CREATE INDEX IF NOT EXISTS IX_Alimentos_CodigoBarras ON Alimentos (CodigoBarras)");
     }
 
-    /// <summary>Cria o banco (se não existir) e carrega a base de alimentos.</summary>
     public static async Task PrepararAsync(BancoDeDados db, string caminhoAlimentos)
     {
         await db.Database.EnsureCreatedAsync();

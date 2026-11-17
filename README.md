@@ -1,18 +1,19 @@
 # DoceControle
 
-Site que transforma os limites de carboidratos e de glicose prescritos pelo médico em uma dieta do dia, com
-registro de refeições (manual, por descrição com IA e, no premium, por foto), alimentos criados pelo usuário,
-leitura de código de barras, glicemia, lembretes de insulina, tempo máximo sem comer, histórico e relatório. Mostra os três macronutrientes
-(carboidratos, proteínas e gorduras) no topo do dia e em cada refeição.
-Implementa o documento do projeto (RF01–RF20, RN01–RN26, RI01–RI15).
+Site que pega os limites de carboidratos e de glicose passados pelo médico e monta a dieta do dia. Também tem
+registro de refeições (manual, por descrição com IA e, no plano premium, por foto), alimentos criados pelo próprio
+usuário, leitura de código de barras, glicemia, lembretes de insulina, tempo máximo sem comer, histórico e
+relatório para levar à consulta.
 
-- **Backend:** C# / ASP.NET Core 10, EF Core + SQLite (`backend/DoceControle.Api`)
-- **Frontend:** TypeScript / React + Vite (`frontend`)
-- **Testes:** xUnit, regras de cálculo (`backend/DoceControle.Testes`)
+O site não substitui a orientação médica e não calcula nem sugere dose de insulina.
+
+- Backend: C# com ASP.NET Core 10, EF Core e SQLite (`backend/DoceControle.Api`)
+- Frontend: TypeScript com React e Vite (`frontend`)
+- Testes: xUnit (`backend/DoceControle.Testes`)
 
 ## Como rodar
 
-Pré-requisitos: .NET SDK 10 e Node 20+. Na raiz do projeto:
+Precisa do .NET SDK 10 e do Node 20 ou mais novo. Na raiz do projeto:
 
 ```bash
 npm --prefix frontend install
@@ -20,110 +21,93 @@ npm --prefix frontend run build
 dotnet run --project backend/DoceControle.Api
 ```
 
-O site abre em http://localhost:5187 (o build do frontend vai para `backend/DoceControle.Api/wwwroot`).
+O site abre em http://localhost:5187. O build do frontend vai para `backend/DoceControle.Api/wwwroot`.
 
-Para desenvolver o frontend com recarga automática: deixe a API rodando e, em outro terminal,
-`npm --prefix frontend run dev` (http://localhost:5173, com `/api` repassado para a API).
+Para mexer no frontend com recarga automática, deixe a API rodando e, em outro terminal, rode
+`npm --prefix frontend run dev` (http://localhost:5173, com `/api` apontando para a API).
 
-Testes: `dotnet test` na raiz.
+Os testes rodam com `dotnet test`.
 
-> No Windows, mantenha o projeto em um caminho curto (ex.: `C:\Projetos\DoceControle`):
-> caminhos muito longos passam do limite de 260 caracteres na compilação.
+No Windows, deixe o projeto num caminho curto (como `C:\Projetos\DoceControle`), porque caminhos muito longos
+passam do limite de 260 caracteres na compilação.
 
 ## Programa para Windows (versão de teste)
 
-Para abrir com um clique, sem terminal e sem ter o .NET instalado, gere o `DoceControle.exe` no PowerShell,
-na raiz do projeto:
+Para abrir com dois cliques, sem precisar do .NET instalado, gere o `DoceControle.exe` no PowerShell:
 
 ```powershell
 .\publicar.ps1            # gera dist\DoceControle\DoceControle.exe
-.\publicar.ps1 -Atalho    # e também cria um atalho na Área de Trabalho
+.\publicar.ps1 -Atalho    # gera e cria um atalho na Área de Trabalho
 ```
 
-Ao abrir o `.exe`, o servidor sobe numa janela de texto e o navegador abre sozinho (a porta é a primeira livre a
-partir da 5187). Para encerrar, feche a janela. Os dados ficam em `%LOCALAPPDATA%\DoceControle`, fora da pasta do
-programa: sobrevivem a trocar o `.exe`. A chave da IA vai em `%LOCALAPPDATA%\DoceControle\appsettings.Local.json`
-(veja o `LEIA-ME.txt` gerado junto).
+Ao abrir, o servidor sobe numa janela de texto e o navegador abre sozinho. A porta é a primeira livre a partir da
+5187. Para encerrar, é só fechar a janela. Os dados ficam em `%LOCALAPPDATA%\DoceControle`, fora da pasta do
+programa, então trocar o `.exe` não apaga nada.
 
-Este programa é **só para a fase de teste**: roda neste computador, em HTTP no localhost, sem assinatura digital
-(o Windows pode avisar "O Windows protegeu o computador": *Mais informações* > *Executar assim mesmo*) e sem
-instalador. O modo local desliga o HTTPS (`Hospedagem:Local`); qualquer uso fora deste computador exige HTTPS e
-`Hospedagem:Local=false`.
+É só para teste: roda neste computador, em HTTP no localhost, sem assinatura digital (o Windows pode avisar
+"O Windows protegeu o computador"; use "Mais informações" e "Executar assim mesmo"). Qualquer uso fora do
+computador precisa de HTTPS e de `Hospedagem:Local=false`.
 
 ## IA
 
-A IA usa **somente um provedor real**: Claude, pela API da Anthropic (SDK oficial para C#). Não existe modo
-simulado. Sem chave, a IA fica desativada e o registro manual continua funcionando.
+A IA usa a API do Claude (Anthropic) pelo SDK oficial para C#. Sem chave, ela fica desativada e o registro manual
+continua funcionando. Para ativar, coloque a chave fora do repositório, de um destes jeitos:
 
-Para ativar, defina a chave **fora do repositório**:
-
-```bash
-# PowerShell
+```powershell
 $env:ANTHROPIC_API_KEY = "sua-chave"
 ```
 
-ou use `IA:ChaveApi` em um `appsettings.Local.json`, ao lado do programa ou em `%LOCALAPPDATA%\DoceControle`
-(ignorado pelo Git). Nunca coloque a chave em arquivo versionado.
+ou em `IA:ChaveApi` num `appsettings.Local.json`, ao lado do programa ou em `%LOCALAPPDATA%\DoceControle` (o Git
+ignora esse arquivo).
 
-O que a IA faz (sempre com consentimento da conta e limite diário de usos):
+O que ela faz, sempre com o consentimento do usuário:
 
-| Uso | Plano | O que acontece |
-|---|---|---|
-| Descrever a refeição | Gratuito | Devolve alimentos e quantidades. Os nutrientes saem da base de alimentos (RN06, RN16). |
-| Foto da refeição | Premium | Lê o código de barras no aparelho; sem código, a IA identifica os alimentos. |
-| Criar alimento com IA | Gratuito (texto) / Premium (foto do rótulo) | Propõe os valores por 100 g para o usuário conferir e salvar. |
-| Ler a prescrição | Gratuito | Transcreve foto ou PDF para o formulário. Pede confirmação a cada envio. |
+- descrever a refeição: devolve alimentos e quantidades (grátis, com limite diário);
+- foto da refeição: lê o código de barras no aparelho e, se não houver, identifica os alimentos (premium);
+- criar alimento: propõe os valores por 100 g para o usuário conferir (por texto é grátis, por foto do rótulo é premium);
+- ler a prescrição: transcreve uma foto ou PDF para o formulário, pedindo confirmação a cada envio.
 
-Em todos, a IA só **propõe**: nada é gravado até o usuário conferir e confirmar (RN17). Nenhuma foto ou
-documento é guardado, e fotos seguem sem metadados (RN22).
-
-### Exceção às regras do documento
-
-O documento proíbe obter carboidratos e proteínas da resposta da IA (RI11, RN16). Isso continua valendo para
-**refeições**: os nutrientes de uma refeição sempre saem da tabela de alimentos. A exceção, pedida na
-implementação, é a **criação de um alimento novo**: a IA pode estimar os valores por 100 g (ou copiá-los do
-rótulo, quando a foto mostra a tabela nutricional). Esses alimentos ficam marcados como "estimado por IA",
-valem só para a conta do usuário e ele confere e corrige antes de salvar.
-
-Da mesma forma, a leitura da prescrição por IA **transcreve** valores escritos no documento; ela não define
-limites nem calcula doses (RI01, RI10).
+A IA só propõe. Nada é gravado antes de o usuário conferir e confirmar, e fotos e documentos não são guardados.
+Os carboidratos e proteínas de uma refeição sempre saem da tabela de alimentos, nunca da resposta da IA. A única
+exceção é o alimento novo criado com IA, que fica marcado como "estimado por IA".
 
 ## Código de barras
 
-A leitura da foto é feita no navegador (`BarcodeDetector` nativo ou uma leitora em WebAssembly servida pelo
-próprio site). O servidor consulta o produto no [Open Food Facts](https://world.openfoodfacts.org) enviando
-**apenas o número do código**. A base é colaborativa: os valores vêm como proposta e o usuário confere antes de salvar.
+A foto é lida no próprio navegador (`BarcodeDetector` ou, quando não existe, uma leitora em WebAssembly servida
+pelo site). O servidor consulta o produto no [Open Food Facts](https://world.openfoodfacts.org) mandando só o
+número do código. Como a base é colaborativa, os valores vêm como proposta e o usuário confere antes de salvar.
 
-## Configuração (`appsettings.json`)
+## Configuração
 
-| Chave | Para que serve |
-|---|---|
-| `IA:ChaveApi` (ou variável `ANTHROPIC_API_KEY`) | Chave do provedor de IA. |
-| `IA:Modelo` | Modelo do Claude (padrão `claude-opus-5-5`). |
-| `IA:LimiteDiarioGratuito` / `IA:LimiteDiarioPremium` | Limite diário de usos da IA por usuário (RNF13). |
-| `CodigoBarras:UrlBase` | Base de consulta de código de barras (padrão Open Food Facts). |
-| `Sessao:MinutosInatividade` | Tempo até encerrar a sessão sem atividade (RNF04). |
+Em `appsettings.json`:
 
-## Estrutura
+- `IA:ChaveApi`, ou a variável `ANTHROPIC_API_KEY`: chave da IA
+- `IA:Modelo`: modelo usado (padrão `claude-opus-5-5`)
+- `IA:LimiteDiarioGratuito`: usos da IA por dia no plano gratuito (padrão 5)
+- `IA:LimiteDiarioPremium`: opcional; sem ele o premium não tem limite
+- `CodigoBarras:UrlBase`: base de consulta de código de barras (padrão Open Food Facts)
+- `Sessao:MinutosInatividade`: tempo até encerrar a sessão parada
 
-- `Dominio/` — classes do diagrama UML (`Entidades.cs`) e regras fixas de cálculo (`Regras.cs`).
-- `Servicos/` — visão do dia, histórico e relatório; IA (`IA/`); código de barras; pagamento simulado; limpeza de metadados da foto.
-- `Endpoints/` — API REST (`/api/conta`, `/prescricao`, `/jejum`, `/lembretes`, `/alimentos`, `/refeicoes`, `/glicemias`, `/dia`, `/historico`, `/relatorio`, `/ia`, `/assinatura`).
-- `Dados/alimentos.json` — base de alimentos (carboidratos e proteínas por 100 g).
+## Estrutura do backend
 
-## Limites desta versão (escopo acadêmico)
+- `Dominio/`: entidades e regras de cálculo (`Regras.cs`)
+- `Servicos/`: dia, histórico e relatório, IA, código de barras, pagamento simulado e limpeza de metadados da foto
+- `Endpoints/`: rotas da API em `/api`
+- `Dados/`: banco e a base de alimentos (`alimentos.json`)
 
-- **Base de alimentos:** valores de carboidratos, proteínas e gorduras aproximados, inspirados na TACO. Precisam ser conferidos com a tabela oficial antes de qualquer uso real.
-- **Calorias:** o app mostra só os três macronutrientes; não calcula calorias.
-- **Textos de saúde** (`Textos` em `Regras.cs`): provisórios, pendentes de revisão por profissional de saúde.
-- **Pagamento:** simulado (`ProvedorPagamentoSimulado`); nenhum valor é cobrado.
-- **Banco:** criado com `EnsureCreated`; as colunas novas são acrescentadas na inicialização para não perder dados. Uma versão comercial deve usar migrações do EF.
-- **IA real:** o código foi verificado com um servidor que imita a API, mas ainda não com uma chave real.
-- **Leitura de código de barras:** testada na consulta ao Open Food Facts; a leitura da foto no navegador ainda não foi testada com fotos reais.
-- O DoceControle não substitui a orientação médica e não calcula nem sugere doses de insulina.
+## Limitações
+
+- A base de alimentos tem valores aproximados, inspirados na TACO. Precisa ser conferida com a tabela oficial.
+- Não calcula calorias, só carboidratos, proteínas e gorduras.
+- Os textos de saúde (`Textos`, em `Regras.cs`) são provisórios e precisam de revisão de um profissional de saúde.
+- O pagamento é simulado e nenhum valor é cobrado.
+- O banco é criado com `EnsureCreated` e as colunas novas são acrescentadas na inicialização. Numa versão de
+  verdade, o certo seria usar migrations.
+- A IA foi testada só com um servidor que imita a API, ainda não com uma chave real.
+- A leitura de código de barras por foto ainda não foi testada com fotos reais; só a consulta ao Open Food Facts foi.
 
 ## Licenças de terceiros
 
-- **Ícones:** [Google Material Symbols](https://fonts.google.com/icons) (estilo *outlined*), pacote `@material-symbols/svg-400`, licença Apache 2.0.
-- **Dados de produtos por código de barras:** [Open Food Facts](https://world.openfoodfacts.org), base aberta e colaborativa (ODbL).
-- **Leitura de código de barras no navegador:** `barcode-detector` e `zxing-wasm`, licença MIT.
+- Ícones: [Google Material Symbols](https://fonts.google.com/icons) (outlined), pacote `@material-symbols/svg-400`, Apache 2.0
+- Dados de produtos: [Open Food Facts](https://world.openfoodfacts.org), ODbL
+- Leitura de código de barras no navegador: `barcode-detector` e `zxing-wasm`, MIT

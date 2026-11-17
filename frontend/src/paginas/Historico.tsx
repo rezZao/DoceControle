@@ -5,7 +5,6 @@ import { Aviso, Carregando, Icone, Selo } from '../componentes/Base'
 import { GraficoCarbo, GraficoGlicemia } from '../componentes/Graficos'
 import { dataCurta, dataIso, diaDaSemana, fmt, gramas, useDados } from '../util'
 
-/** A mesma informação dos gráficos, em tabela (também usada no relatório). */
 export function TabelaHistorico({ dias, comLinks = false }: { dias: DiaHistorico[]; comLinks?: boolean }) {
   return (
     <div className="tabela-rolagem">
@@ -90,7 +89,6 @@ export function ResumoPeriodo({ dias }: { dias: DiaHistorico[] }) {
   )
 }
 
-// RF11: histórico diário e semanal de consumo e de glicemia.
 export function Historico() {
   const [periodo, setPeriodo] = useState(7)
   const { dados: dias, erro } = useDados(() => api.historico(dataIso(), periodo), [periodo])

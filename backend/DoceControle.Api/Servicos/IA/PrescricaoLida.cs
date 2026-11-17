@@ -2,15 +2,12 @@ using DoceControle.Api.Servicos;
 
 namespace DoceControle.Api.Servicos.IA;
 
-// A IA só TRANSCREVE o que está escrito no documento da prescrição. Ela não define limites, não calcula
-// nem sugere doses (RI01, RI10). O resultado só preenche o formulário: o usuário confere tudo e confirma
-// que os valores foram prescritos por um profissional de saúde antes de gravar (RN01).
+// a IA só transcreve o que está no documento: não define limite nem calcula dose
 
 public record RefeicaoLida(string? Nome, string? Horario, double? LimiteCarbo);
 
 public record LembreteLido(string? Horario, string? Descricao, double? DoseInformada);
 
-/// <summary>Como a IA devolve a leitura. Todo campo que não está no documento vem nulo.</summary>
 public record PrescricaoLida(
     double? LimiteCarboDia, double? GlicemiaMin, double? GlicemiaMax, double? MetaProteinaDia,
     double? JejumMaxHoras, List<RefeicaoLida>? Refeicoes, List<LembreteLido>? Lembretes, string? Observacao);
@@ -19,12 +16,11 @@ public record RefeicaoLidaDto(string Nome, string? Horario, double? LimiteCarbo)
 
 public record LembreteLidoDto(string Horario, string? Descricao, double? DoseInformada);
 
-/// <summary>Leitura já conferida pelo servidor: valores fora de faixa viram nulos em vez de irem para o formulário.</summary>
 public record PrescricaoLidaDto(
     double? LimiteCarboDia, int? GlicemiaMin, int? GlicemiaMax, double? MetaProteinaDia, int? JejumMaxMin,
     List<RefeicaoLidaDto> Refeicoes, List<LembreteLidoDto> Lembretes, string? Observacao);
 
-public record PrescricaoLidaRespostaDto(PrescricaoLidaDto Leitura, int UsosRestantes);
+public record PrescricaoLidaRespostaDto(PrescricaoLidaDto Leitura, int? UsosRestantes);
 
 public static class SaneadorPrescricao
 {

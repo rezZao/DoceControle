@@ -1,19 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { mensagemDeErro } from './api'
+import { mensagemDeErro, type IaEstado } from './api'
 
 const dois = (n: number) => String(n).padStart(2, '0')
 
-/** Data local no formato "yyyy-MM-dd". */
 export function dataIso(d: Date = new Date()): string {
   return `${d.getFullYear()}-${dois(d.getMonth() + 1)}-${dois(d.getDate())}`
 }
 
-/** Data e hora locais no formato dos campos datetime-local: "yyyy-MM-ddTHH:mm". */
 export function dataHoraLocal(d: Date = new Date()): string {
   return `${dataIso(d)}T${dois(d.getHours())}:${dois(d.getMinutes())}`
 }
 
-/** A API recebe a hora local com segundos, sem fuso. */
 export const paraApi = (dataHora: string) => (dataHora.length === 16 ? dataHora + ':00' : dataHora)
 
 export function somarDias(iso: string, dias: number): string {
@@ -22,7 +19,6 @@ export function somarDias(iso: string, dias: number): string {
   return dataIso(d)
 }
 
-/** "2026-11-12T08:30:00" -> "08:30" */
 export const horaDe = (dataHora: string) => dataHora.slice(11, 16)
 
 const numero = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 })
@@ -47,7 +43,6 @@ export function diaDaSemana(iso: string): string {
   return new Date(iso + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')
 }
 
-/** RN06, só para a prévia na tela. O valor gravado é sempre calculado pelo servidor. */
 export const nutriente = (quantidadeG: number, por100g: number) => (quantidadeG * por100g) / 100
 
 export function lerNumero(texto: string): number | null {
@@ -57,7 +52,6 @@ export function lerNumero(texto: string): number | null {
   return Number.isFinite(n) ? n : null
 }
 
-/** Carrega dados da API e permite recarregar. */
 export function useDados<T>(carregar: () => Promise<T>, dependencias: unknown[]) {
   const [dados, setDados] = useState<T | undefined>(undefined)
   const [erro, setErro] = useState<string | null>(null)
@@ -88,7 +82,6 @@ export function useDados<T>(carregar: () => Promise<T>, dependencias: unknown[])
   return { dados, erro, carregando, recarregar }
 }
 
-/** Texto de duração: "2 h 10 min", "45 min", "4 h". */
 export function duracao(minutos: number): string {
   const total = Math.max(0, Math.round(minutos))
   const h = Math.floor(total / 60)
@@ -97,7 +90,6 @@ export function duracao(minutos: number): string {
   return m === 0 ? `${h} h` : `${h} h ${m} min`
 }
 
-/** Reduz a foto e a reencoda em JPEG no navegador, o que já descarta EXIF e localização (RN22). */
 export async function prepararFoto(arquivo: Blob, ladoMaximo = 1280): Promise<string> {
   const imagem = await createImageBitmap(arquivo)
   const escala = Math.min(1, ladoMaximo / Math.max(imagem.width, imagem.height))
@@ -111,7 +103,6 @@ export async function prepararFoto(arquivo: Blob, ladoMaximo = 1280): Promise<st
   return tela.toDataURL('image/jpeg', 0.85).split(',')[1]
 }
 
-/** Arquivo inteiro em base64 (usado para PDF). */
 export async function arquivoParaBase64(arquivo: Blob): Promise<string> {
   const bytes = new Uint8Array(await arquivo.arrayBuffer())
   let texto = ''
@@ -119,9 +110,17 @@ export async function arquivoParaBase64(arquivo: Blob): Promise<string> {
   return btoa(texto)
 }
 
-/** Leva um elemento para a tela, sem animação quando o usuário pediu para reduzir movimento. */
 export function rolarPara(elemento: Element | null, bloco: ScrollLogicalPosition = 'start') {
   if (!elemento) return
   const reduzir = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   elemento.scrollIntoView({ behavior: reduzir ? 'auto' : 'smooth', block: bloco })
+}
+
+export function usosRestantesDaIA(ia: IaEstado): number | null {
+  return ia.limiteDiario === null ? null : Math.max(0, ia.limiteDiario - ia.usosHoje)
+}
+
+export function textoUsosDaIA(ia: IaEstado): string {
+  const restantes = usosRestantesDaIA(ia)
+  return restantes === null ? 'Sem limite de usos da IA.' : `${restantes} de ${ia.limiteDiario} usos restantes hoje.`
 }

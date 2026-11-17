@@ -8,11 +8,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DoceControle.Api.Endpoints;
 
-/// <summary>
-/// Usos da IA (RF15 a RF18, RF20). Em todos, a IA só propõe: nada é gravado até o usuário conferir e confirmar
-/// (RN17, RI09). A refeição é gravada em POST /api/refeicoes, o alimento em POST /api/alimentos e a prescrição em
-/// PUT /api/prescricao.
-/// </summary>
 public static class EndpointsIA
 {
     private const int MaxCaracteresDescricao = 600;
@@ -31,49 +26,42 @@ public static class EndpointsIA
 
     // Regras comuns a todo uso da IA
 
-    private sealed record Autorizacao(Usuario Usuario, UsoIA? Uso, int Limite);
+    private sealed record Autorizacao(Usuario Usuario, UsoIA? Uso, int? Limite);
 
     private static async Task<(Autorizacao? Autorizacao, IResult? Erro)> AutorizarAsync(
         ClaimsPrincipal principal, BancoDeDados db, IServicoIA ia, IConfiguration config, bool exigePremium, CancellationToken ct)
     {
         var usuario = await db.Usuarios.FirstAsync(u => u.Id == principal.UsuarioId(), ct);
 
-        // Sem provedor configurado nada é simulado: o usuário segue pelo registro manual (RN19).
         if (!ia.Configurada)
             return (null, Erro.Status(503, "A IA ainda não foi configurada neste servidor. Você pode registrar manualmente.", "ia_nao_configurada"));
 
-        // RN20: sem o consentimento específico, nada é enviado à IA.
         if (usuario.ConsentimentoIAEm is null)
             return (null, Erro.Status(403, "Ative o consentimento para o uso da IA na sua conta.", "sem_consentimento_ia"));
 
-        // RN23 / RF20: foto de refeição só para assinantes premium.
         if (exigePremium && usuario.Plano != Plano.Premium)
             return (null, Erro.Status(403, "O registro por foto faz parte do plano premium.", "premium_necessario"));
 
-        // RNF13: limite diário de usos por usuário.
         var hoje = Formatos.Hoje();
         var limite = Sessao.LimiteDiarioIA(config, usuario.Plano);
         var uso = await db.UsosIA.FirstOrDefaultAsync(x => x.UsuarioId == usuario.Id && x.Data == hoje, ct);
-        if (uso is { } atual && atual.Quantidade >= limite)
+        if (limite is { } maximo && uso is { } atual && atual.Quantidade >= maximo)
             return (null, Erro.Status(429, "Você atingiu o limite de usos da IA por hoje. O registro manual continua disponível.", "limite_diario"));
 
         return (new Autorizacao(usuario, uso, limite), null);
     }
 
-    /// <summary>Conta um uso da IA e devolve quantos ainda restam hoje.</summary>
-    private static async Task<int> ConsumirAsync(BancoDeDados db, Autorizacao autorizacao, CancellationToken ct)
+    private static async Task<int?> ConsumirAsync(BancoDeDados db, Autorizacao autorizacao, CancellationToken ct)
     {
         var uso = autorizacao.Uso ?? db.UsosIA.Add(new UsoIA { UsuarioId = autorizacao.Usuario.Id, Data = Formatos.Hoje() }).Entity;
         uso.Quantidade++;
         await db.SaveChangesAsync(ct);
-        return Math.Max(0, autorizacao.Limite - uso.Quantidade);
+        return autorizacao.Limite is { } limite ? Math.Max(0, limite - uso.Quantidade) : null;
     }
 
     private static IResult Falha(IAIndisponivelException ex) =>
-        // RN19: a IA falhou; o usuário segue pelo registro manual.
         Erro.Status(503, ex.Message + " Você pode registrar manualmente.", "ia_indisponivel");
 
-    /// <summary>Foto em JPEG, sem metadados (RN22). A foto não é guardada.</summary>
     private static bool TentarLerFoto(string? base64, out byte[] foto, out IResult? erro)
     {
         foto = [];
@@ -119,7 +107,6 @@ public static class EndpointsIA
     private static async Task<IResult> SugerirRefeicaoPorFoto(
         SugestaoFotoReq req, ClaimsPrincipal principal, BancoDeDados db, IServicoIA ia, IConfiguration config, CancellationToken ct)
     {
-        // O plano é checado antes de qualquer processamento da imagem (RN23).
         var plano = await db.Usuarios.AsNoTracking()
             .Where(u => u.Id == principal.UsuarioId()).Select(u => u.Plano).FirstAsync(ct);
         if (plano != Plano.Premium)
@@ -151,7 +138,6 @@ public static class EndpointsIA
             return Falha(ex);
         }
 
-        // RN16 / RI11: os nutrientes são calculados aqui, pela base, nunca pela resposta da IA.
         var porNome = alimentos.GroupBy(a => a.NomeBusca).ToDictionary(g => g.Key, g => g.First());
         var itens = resultado.Itens
             .Where(i => !string.IsNullOrWhiteSpace(i.Descricao))
@@ -160,7 +146,6 @@ public static class EndpointsIA
             {
                 var quantidade = double.IsFinite(i.QuantidadeG) ? Math.Clamp(Math.Round(i.QuantidadeG), 0, 5000) : 0;
                 var alimento = i.AlimentoBase is { } nome ? porNome.GetValueOrDefault(Regras.Normalizar(nome)) : null;
-                // RN18: alimento não reconhecido fica sinalizado para escolha (ou criação) manual.
                 return alimento is null
                     ? new ItemSugeridoDto(i.Descricao.Trim(), quantidade, null, null, null, null)
                     : new ItemSugeridoDto(
@@ -189,7 +174,6 @@ public static class EndpointsIA
         return Results.Ok(new SugestaoDto(sugestao.Id, entrada, itens, restantes));
     }
 
-    // RN17: sugestões descartadas não são guardadas.
     private static async Task<IResult> Descartar(int id, ClaimsPrincipal principal, BancoDeDados db)
     {
         var usuarioId = principal.UsuarioId();
@@ -243,8 +227,6 @@ public static class EndpointsIA
         }
 
         var restantes = await ConsumirAsync(db, autorizacao!, ct);
-        // É só uma proposta para preencher o formulário. O usuário confere e corrige antes de salvar, e o
-        // alimento fica marcado como estimado pela IA.
         var proposta = new PropostaAlimentoDto(
             Limpo(estimado.Nome, 80), Limpo(estimado.Categoria, 40, "Outros"),
             Numero(estimado.CarboPor100g, 100), Numero(estimado.ProteinaPor100g, 100), Numero(estimado.GorduraPor100g, 100),
@@ -265,10 +247,7 @@ public static class EndpointsIA
 
     // Prescrição
 
-    /// <summary>
-    /// Lê a prescrição de uma foto ou PDF. É dado de saúde sensível, então, além do consentimento geral da IA,
-    /// o envio deste documento exige a confirmação do usuário no momento (RN20, RNF11). O arquivo não é guardado.
-    /// </summary>
+    // prescrição é dado sensível: além do consentimento geral, pede confirmação a cada envio; o arquivo não é guardado
     private static async Task<IResult> LerPrescricao(
         LerPrescricaoReq req, ClaimsPrincipal principal, BancoDeDados db, IServicoIA ia, IConfiguration config, CancellationToken ct)
     {

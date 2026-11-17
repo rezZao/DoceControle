@@ -4,7 +4,6 @@ import { api, ErroApi, type Conta } from './api'
 interface ContextoConta {
   conta: Conta | null
   carregando: boolean
-  /** Verdadeiro quando a sessão caiu por inatividade (RNF04). */
   sessaoEncerrada: boolean
   recarregar: () => Promise<void>
   sair: () => Promise<void>
@@ -64,7 +63,6 @@ export function useConta(): ContextoConta {
   return contexto
 }
 
-/** Para telas que só existem com o usuário autenticado. */
 export function useContaAtiva(): Conta {
   const { conta } = useConta()
   if (!conta) throw new Error('Esta tela exige um usuário autenticado.')

@@ -26,7 +26,6 @@ export function ContaPagina() {
     }
   }
 
-  // RF14: excluir a conta e os dados a pedido do usuário.
   async function excluir(evento: FormEvent) {
     evento.preventDefault()
     if (!window.confirm('Excluir a conta apaga todos os seus dados e não pode ser desfeito. Continuar?')) return
@@ -57,7 +56,6 @@ export function ContaPagina() {
         </p>
       </section>
 
-      {/* RF19 / RF20: assinatura premium. Só o registro por foto é pago (RN24). */}
       <section className="cartao" aria-labelledby="titulo-plano">
         <h2 id="titulo-plano">
           Plano {premium ? <Selo tipo="premium"><Icone nome="estrela" tamanho={14} /> Premium</Selo> : <Selo tipo="neutro">Gratuito</Selo>}
@@ -68,11 +66,11 @@ export function ContaPagina() {
             relatório.
           </li>
           <li>
-            <strong>Gratuito com limite diário:</strong> registro por descrição com IA ({conta.ia.limiteDiario} usos por
-            dia no seu plano).
+            <strong>Gratuito com limite diário:</strong> registro por descrição com IA
+            {conta.ia.limiteDiario !== null && ` (${conta.ia.limiteDiario} usos por dia no seu plano)`}.
           </li>
           <li>
-            <strong>Premium:</strong> registro por foto com IA.
+            <strong>Premium:</strong> registro por foto com IA e sem limite diário de usos da IA.
           </li>
         </ul>
         {conta.pagamentoSimulado && (
@@ -94,7 +92,6 @@ export function ContaPagina() {
         )}
       </section>
 
-      {/* RN20: consentimento separado para a IA, revogável a qualquer momento. */}
       <section className="cartao" aria-labelledby="titulo-ia">
         <h2 id="titulo-ia">Registro de refeições com IA</h2>
         <p>
@@ -118,7 +115,9 @@ export function ContaPagina() {
         </label>
         <p className="texto-apoio">
           {conta.ia.consentida
-            ? `Usos hoje: ${conta.ia.usosHoje} de ${conta.ia.limiteDiario}.`
+            ? conta.ia.limiteDiario === null
+              ? `Usos hoje: ${conta.ia.usosHoje}. O premium não tem limite diário.`
+              : `Usos hoje: ${conta.ia.usosHoje} de ${conta.ia.limiteDiario}.`
             : 'Sem este consentimento, o registro com IA fica desativado e o registro manual segue disponível.'}{' '}
           {!conta.ia.configurada &&
             'A IA ainda não foi configurada neste servidor, então o registro com IA está indisponível por enquanto.'}

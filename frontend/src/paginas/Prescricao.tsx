@@ -4,7 +4,18 @@ import { api, mensagemDeErro, type Lembrete, type PrescricaoLida } from '../api'
 import { Aviso, Carregando, Icone, Orientacao, Selo } from '../componentes/Base'
 import { useLembretes } from '../componentes/Lembretes'
 import { useConta, useContaAtiva } from '../conta'
-import { arquivoParaBase64, dataCurta, dataIso, fmt, gramas, lerNumero, prepararFoto, useDados } from '../util'
+import {
+  arquivoParaBase64,
+  dataCurta,
+  dataIso,
+  fmt,
+  gramas,
+  lerNumero,
+  prepararFoto,
+  textoUsosDaIA,
+  useDados,
+  usosRestantesDaIA,
+} from '../util'
 
 interface RefeicaoForm {
   chave: number
@@ -13,7 +24,6 @@ interface RefeicaoForm {
   limite: string
 }
 
-// Só nomes e horários de partida. Os limites nunca têm valor padrão (RI02).
 const refeicoesIniciais: Omit<RefeicaoForm, 'chave'>[] = [
   { nome: 'Café da manhã', horario: '07:00', limite: '' },
   { nome: 'Lanche da manhã', horario: '10:00', limite: '' },
@@ -29,11 +39,6 @@ const AVISO =
 
 const MAX_PDF = 4 * 1024 * 1024
 
-/**
- * Leitura da prescrição por IA (foto ou PDF). A IA só TRANSCREVE o que está escrito: não define limites nem
- * calcula doses (RI01, RI10). O resultado preenche o formulário abaixo; nada é salvo até o usuário conferir e
- * confirmar que os valores foram prescritos por um profissional (RN01). O documento não é guardado.
- */
 function LeituraPorIA({ aoLer }: { aoLer: (leitura: PrescricaoLida) => void }) {
   const conta = useContaAtiva()
   const { recarregar } = useConta()
@@ -43,7 +48,7 @@ function LeituraPorIA({ aoLer }: { aoLer: (leitura: PrescricaoLida) => void }) {
   const [resumo, setResumo] = useState<PrescricaoLida | null>(null)
 
   const ia = conta.ia
-  const usosRestantes = Math.max(0, ia.limiteDiario - ia.usosHoje)
+  const usosRestantes = usosRestantesDaIA(ia)
 
   async function ler(arquivo: File | undefined) {
     if (!arquivo) return
@@ -113,7 +118,7 @@ function LeituraPorIA({ aoLer }: { aoLer: (leitura: PrescricaoLida) => void }) {
               }}
             />
           </label>
-          <p className="texto-apoio">{usosRestantes} de {ia.limiteDiario} usos restantes hoje.</p>
+          <p className="texto-apoio">{textoUsosDaIA(ia)}</p>
         </>
       )}
 
@@ -135,7 +140,6 @@ function LeituraPorIA({ aoLer }: { aoLer: (leitura: PrescricaoLida) => void }) {
   )
 }
 
-// RF03 / RF12: registrar e atualizar a prescrição médica.
 function FormularioPrescricao({ leitura }: { leitura: PrescricaoLida | null }) {
   const { recarregar: recarregarConta } = useConta()
   const { dados: atual, erro: erroCarga, carregando, recarregar } = useDados(() => api.prescricao(), [])
@@ -171,7 +175,6 @@ function FormularioPrescricao({ leitura }: { leitura: PrescricaoLida | null }) {
     )
   }, [atual])
 
-  // Valores lidos da prescrição pela IA: só preenchem o formulário. O que não foi encontrado fica como estava.
   useEffect(() => {
     if (!leitura) return
     if (leitura.limiteCarboDia !== null) setLimite(String(leitura.limiteCarboDia))
@@ -201,7 +204,6 @@ function FormularioPrescricao({ leitura }: { leitura: PrescricaoLida | null }) {
   if (carregando && atual === undefined) return <Carregando />
 
   const limiteNumero = lerNumero(limite)
-  // RN03: por padrão, partes iguais. A parte é truncada para a soma nunca passar do limite.
   const parteIgual =
     limiteNumero && refeicoes.length > 0 ? Math.floor((limiteNumero / refeicoes.length) * 10 + 1e-9) / 10 : null
   const soma = refeicoes.reduce((s, r) => s + (lerNumero(r.limite) ?? 0), 0)
@@ -221,7 +223,6 @@ function FormularioPrescricao({ leitura }: { leitura: PrescricaoLida | null }) {
     const horasJejum = lerNumero(jejum)
     if (jejum.trim() && (horasJejum === null || horasJejum < 0.5 || horasJejum > 12))
       return setErro('O tempo máximo sem comer deve ficar entre 30 minutos e 12 horas.')
-    // RN01: os valores só são cadastrados com a confirmação de que foram prescritos.
     if (!confirma) return setErro('Confirme que estes valores foram prescritos por um profissional de saúde.')
 
     setEnviando(true)
@@ -377,8 +378,6 @@ function FormularioPrescricao({ leitura }: { leitura: PrescricaoLida | null }) {
   )
 }
 
-// RF10: horários (e, se o usuário quiser, a dose prescrita) para os lembretes de insulina.
-// Opcionais: o site funciona sem eles (RN12, RI07).
 function LembretesDeInsulina({
   sugeridos,
   aoUsar,

@@ -3,9 +3,6 @@ using DoceControle.Api.Servicos.IA;
 
 namespace DoceControle.Testes;
 
-// Regras do tempo máximo sem comer, do código de barras, dos alimentos criados pelo usuário e da leitura
-// da prescrição por IA. Os valores são fictícios e não têm valor clínico.
-
 public class TempoSemComerTestes
 {
     private static readonly DateTime Hoje = new(2026, 11, 12);

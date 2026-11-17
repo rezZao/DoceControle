@@ -4,9 +4,6 @@ using DoceControle.Api.Servicos.IA;
 
 namespace DoceControle.Testes;
 
-// RNF07: as regras de cálculo da dieta são cobertas por testes automatizados.
-// Os valores usados aqui são fictícios e não têm valor clínico.
-
 public class RegrasDeNutrientesTestes
 {
     [Fact]

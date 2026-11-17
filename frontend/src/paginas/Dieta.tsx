@@ -6,9 +6,7 @@ import { dataIso, duracao, fmt, useDados } from '../util'
 
 const MAX_IDEIAS = 4
 
-// RF04: a dieta do dia. O limite diário é distribuído entre as refeições (RN03), com a meta de
-// proteínas quando informada (RN04) e porções de exemplo que cabem no restante (RN05).
-// A tela mostra só o essencial; os detalhes de cada refeição abrem ao tocar nela.
+// dieta do dia: o limite é dividido entre as refeições e cada uma abre ao tocar
 export function Dieta() {
   const { dados: dia, erro } = useDados(() => api.dia(dataIso()), [])
 

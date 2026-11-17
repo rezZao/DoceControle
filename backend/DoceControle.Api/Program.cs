@@ -10,8 +10,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-// O programa pode ser aberto de qualquer pasta (por exemplo, por um atalho). Fora do modo de desenvolvimento,
-// o site e a configuração ficam ao lado do executável, não na pasta em que ele foi aberto.
+// o programa pode ser aberto de qualquer pasta; fora do desenvolvimento usa a pasta do executável
 var emDesenvolvimento = string.Equals(
     Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "Development", StringComparison.OrdinalIgnoreCase);
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
@@ -21,33 +20,29 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 });
 var config = builder.Configuration;
 
-// Dados e configuração do usuário ficam em %LOCALAPPDATA%\DoceControle: sobrevivem a trocar ou atualizar o programa.
+// dados e configuração ficam em %LOCALAPPDATA%\DoceControle, fora da pasta do programa
 var pastaDoUsuario = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "DoceControle");
 
-// Configuração local, fora do repositório: é onde vai a chave da IA (IA:ChaveApi).
+// appsettings.Local.json fica fora do Git: é onde vai a chave da IA
 builder.Configuration.AddJsonFile(Path.Combine(AppContext.BaseDirectory, "appsettings.Local.json"), optional: true);
 builder.Configuration.AddJsonFile(Path.Combine(pastaDoUsuario, "appsettings.Local.json"), optional: true);
 
-// Fase de teste: o programa roda só neste computador, em HTTP no localhost, sem HSTS nem redirecionamento para
-// HTTPS. Qualquer uso fora do computador local exige HTTPS e Hospedagem:Local=false (RNF04).
+// fase de teste: só neste computador, em HTTP no localhost (fora dele precisa de HTTPS)
 var hospedagemLocal = config.GetValue("Hospedagem:Local", true);
 var abrirNavegador = config.GetValue("Hospedagem:AbrirNavegador", !emDesenvolvimento);
 
-// O banco fica na pasta do usuário tanto no programa (.exe) quanto em "dotnet run": as contas valem nos dois.
-// (Antes, cada modo tinha o seu banco, e uma conta criada em um não existia no outro.) Para usar outro banco,
-// defina ConnectionStrings:Padrao com outro caminho.
+// o banco fica na pasta do usuário tanto no .exe quanto no dotnet run
 Directory.CreateDirectory(pastaDoUsuario);
 var textoConexao = config.GetConnectionString("Padrao") ?? "Data Source=dococontrole.db";
 if (textoConexao == "Data Source=dococontrole.db")
     textoConexao = $"Data Source={Path.Combine(pastaDoUsuario, "dococontrole.db")}";
 
-// Cookie de login: nome da aplicação e chaves fixos, para valer em qualquer cópia do programa (outra porta,
-// outra pasta, .exe ou dotnet run). Sem isso, cada cópia invalidava o login da outra.
+// nome da aplicação e chaves fixos, para o login valer em qualquer cópia do programa
 builder.Services.AddDataProtection()
     .SetApplicationName("DoceControle")
     .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(pastaDoUsuario, "chaves")));
 
-// Sem endereço definido (--urls ou ASPNETCORE_URLS), usa a primeira porta livre a partir da 5187.
+// sem endereço definido, usa a primeira porta livre a partir da 5187
 if (string.IsNullOrWhiteSpace(config["urls"]))
     builder.WebHost.UseUrls($"http://localhost:{PortaLivre(5187)}");
 
@@ -57,14 +52,12 @@ builder.Services.AddScoped<ServicoDia>();
 builder.Services.AddSingleton<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
 builder.Services.AddSingleton<IProvedorPagamento, ProvedorPagamentoSimulado>();
 
-// Provedor de IA: Claude, com a chave em IA:ChaveApi ou na variável ANTHROPIC_API_KEY. Sem chave, a IA fica
-// desativada e o registro manual segue disponível: nada é simulado.
+// sem chave, a IA fica desativada e o registro manual continua funcionando
 var temChaveIA = !string.IsNullOrWhiteSpace(config["IA:ChaveApi"]) ||
                  !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY"));
 if (temChaveIA) builder.Services.AddSingleton<IServicoIA, ServicoIAClaude>();
 else builder.Services.AddSingleton<IServicoIA, ServicoIANaoConfigurado>();
 
-// Consulta de produtos por código de barras (Open Food Facts). Só o número do código sai do servidor.
 builder.Services.AddHttpClient<IConsultaCodigoBarras, ConsultaOpenFoodFacts>(cliente =>
 {
     cliente.BaseAddress = new Uri(config["CodigoBarras:UrlBase"] ?? "https://world.openfoodfacts.org/");
@@ -75,7 +68,7 @@ builder.Services.AddHttpClient<IConsultaCodigoBarras, ConsultaOpenFoodFacts>(cli
 builder.Services.ConfigureHttpJsonOptions(o =>
     o.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
-// RNF04: sessão em cookie HttpOnly, encerrada após um período sem atividade.
+// sessão em cookie HttpOnly, encerrada por inatividade
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(o =>
@@ -114,7 +107,7 @@ using (var escopo = app.Services.CreateScope())
 if (!emDesenvolvimento && !hospedagemLocal)
 {
     app.UseHsts();
-    app.UseHttpsRedirection(); // RNF04
+    app.UseHttpsRedirection();
 }
 
 app.UseDefaultFiles();

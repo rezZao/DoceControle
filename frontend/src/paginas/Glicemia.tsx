@@ -4,7 +4,6 @@ import { Aviso, Carregando, Orientacao } from '../componentes/Base'
 import { FormularioGlicemia, ListaGlicemias } from '../componentes/Glicemias'
 import { dataIso, useDados } from '../util'
 
-// RF07 / RF09 / RF12: registrar, editar e excluir medições de glicemia.
 export function Glicemia() {
   const { dados, erro, recarregar } = useDados(() => api.relatorio(dataIso(), 7), [])
   const [edicao, setEdicao] = useState<RegistroGlicemia | null>(null)

@@ -6,10 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DoceControle.Api.Endpoints;
 
-/// <summary>
-/// Base de alimentos (RF05) e alimentos criados pelo usuário. Os alimentos criados são visíveis só para quem os criou
-/// e entram no cálculo como qualquer outro: os nutrientes de uma refeição saem sempre da tabela de alimentos (RN06).
-/// </summary>
 public static class EndpointsAlimentos
 {
     private const int MaxAlimentosProprios = 300;
@@ -94,7 +90,6 @@ public static class EndpointsAlimentos
         return Results.Ok();
     }
 
-    // Código de barras: se o alimento já existe, devolve ele; se não, uma proposta para o usuário conferir.
     private static async Task<IResult> PorCodigo(
         string codigo, ClaimsPrincipal principal, BancoDeDados db, IConsultaCodigoBarras consulta, CancellationToken ct)
     {

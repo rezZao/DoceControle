@@ -2,8 +2,7 @@ using DoceControle.Api.Dominio;
 
 namespace DoceControle.Api;
 
-// Formatos de entrada e saída da API. Horários trafegam como "HH:mm" e datas como "yyyy-MM-dd".
-// Data e hora dos registros são a hora local informada pelo navegador, sem fuso.
+// horários trafegam como "HH:mm" e datas como "yyyy-MM-dd"; a hora dos registros é a local do navegador, sem fuso
 
 public record Erro(string Mensagem, string? Codigo = null)
 {
@@ -19,8 +18,7 @@ public record CadastroReq(string? Nome, string? Email, string? Senha, bool Conse
 public record EntrarReq(string? Email, string? Senha);
 public record ConsentimentoIAReq(bool Consentir);
 public record ExcluirContaReq(string? Senha);
-/// <summary>Configurada = há um provedor de IA no servidor. FotoLiberada = plano premium.</summary>
-public record IaEstadoDto(bool Configurada, bool Consentida, int LimiteDiario, int UsosHoje, bool FotoLiberada);
+public record IaEstadoDto(bool Configurada, bool Consentida, int? LimiteDiario, int UsosHoje, bool FotoLiberada);
 public record ContaDto(
     string Nome, string Email, Plano Plano, DateTime ConsentimentoEm, bool TemPrescricao,
     IaEstadoDto Ia, bool PagamentoSimulado, int MinutosSessao);
@@ -35,7 +33,6 @@ public record PrescricaoDto(
     int Id, string VigenteDesde, double LimiteCarboDia, int GlicemiaMin, int GlicemiaMax,
     double? MetaProteinaDia, int? JejumMaxMin, bool DivisaoPersonalizada, List<MetaDto> Refeicoes);
 
-/// <summary>Tempo desde a última refeição em relação ao máximo orientado pelo médico.</summary>
 public record JejumDto(EstadoJejum Estado, int Minutos, int? LimiteMin, int RestanteMin, string? Aviso);
 
 // Lembretes
@@ -50,20 +47,14 @@ public record AlimentoDto(
     int Id, string Nome, string Categoria, double CarboPor100g, double ProteinaPor100g, double GorduraPor100g,
     double PorcaoPadraoG, string PorcaoDescricao, OrigemAlimento Origem, string? CodigoBarras, bool Proprio);
 
-/// <summary>Alimento que o usuário cria. A origem só pode ser Manual, IA ou CodigoBarras.</summary>
 public record NovoAlimentoReq(
     string? Nome, string? Categoria, double CarboPor100g, double ProteinaPor100g, double GorduraPor100g, double PorcaoPadraoG,
     string? PorcaoDescricao, OrigemAlimento Origem, string? CodigoBarras);
 
-/// <summary>
-/// Dados para preencher o formulário de um alimento novo, vindos da IA ou de um código de barras.
-/// Nada é gravado até o usuário conferir e confirmar. Os números ficam nulos quando a fonte não os tem.
-/// </summary>
 public record PropostaAlimentoDto(
     string Nome, string Categoria, double? CarboPor100g, double? ProteinaPor100g, double? GorduraPor100g, double PorcaoPadraoG,
     string PorcaoDescricao, OrigemAlimento Origem, string? CodigoBarras, string? Observacao);
 
-/// <summary>Resultado de um código de barras: um alimento que já existe, ou uma proposta para confirmar.</summary>
 public record CodigoBarrasDto(AlimentoDto? Existente, PropostaAlimentoDto? Proposta);
 
 public record SugestaoAlimentoTextoReq(string? Descricao);
@@ -111,5 +102,5 @@ public record SugestaoTextoReq(string? Descricao);
 public record SugestaoFotoReq(string? ImagemBase64);
 public record ItemSugeridoDto(
     string Descricao, double QuantidadeG, AlimentoDto? Alimento, double? Carbo, double? Proteina, double? Gordura);
-public record SugestaoDto(int Id, EntradaIA Entrada, List<ItemSugeridoDto> Itens, int UsosRestantes);
-public record AlimentoEstimadoDto(PropostaAlimentoDto Proposta, int UsosRestantes);
+public record SugestaoDto(int Id, EntradaIA Entrada, List<ItemSugeridoDto> Itens, int? UsosRestantes);
+public record AlimentoEstimadoDto(PropostaAlimentoDto Proposta, int? UsosRestantes);

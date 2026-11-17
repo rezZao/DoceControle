@@ -5,7 +5,6 @@ import { SeloGlicemia } from '../componentes/Glicemias'
 import { dataCurta, dataIso, duracao, fmt, gramas, horaDe, useDados } from '../util'
 import { ResumoPeriodo, TabelaHistorico } from './Historico'
 
-// RF13: relatório para levar à consulta, em formato imprimível.
 export function RelatorioPagina() {
   const [periodo, setPeriodo] = useState(14)
   const { dados: r, erro } = useDados(() => api.relatorio(dataIso(), periodo), [periodo])

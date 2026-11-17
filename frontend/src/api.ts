@@ -5,12 +5,10 @@ export type SituacaoGlicemia = 'SemPrescricao' | 'NaFaixa' | 'Abaixo' | 'Acima'
 export type EntradaIA = 'Texto' | 'Foto'
 
 export interface IaEstado {
-  /** Falso quando o servidor não tem um provedor de IA configurado: a IA fica desativada. */
   configurada: boolean
   consentida: boolean
-  limiteDiario: number
+  limiteDiario: number | null
   usosHoje: number
-  /** Plano premium: libera o registro por foto. */
   fotoLiberada: boolean
 }
 
@@ -39,7 +37,6 @@ export interface Prescricao {
   glicemiaMin: number
   glicemiaMax: number
   metaProteinaDia: number | null
-  /** Tempo máximo, em minutos, que o médico orientou ficar sem comer. */
   jejumMaxMin: number | null
   divisaoPersonalizada: boolean
   refeicoes: Meta[]
@@ -88,7 +85,6 @@ export interface Alimento {
   porcaoDescricao: string
   origem: OrigemAlimento
   codigoBarras: string | null
-  /** Criado pelo próprio usuário. */
   proprio: boolean
 }
 
@@ -104,7 +100,6 @@ export interface NovoAlimento {
   codigoBarras: string | null
 }
 
-/** Dados para preencher o formulário de um alimento novo (IA ou código de barras). Nada foi gravado. */
 export interface PropostaAlimento {
   nome: string
   categoria: string
@@ -271,7 +266,7 @@ export interface Sugestao {
   id: number
   entrada: EntradaIA
   itens: ItemSugerido[]
-  usosRestantes: number
+  usosRestantes: number | null
 }
 
 export class ErroApi extends Error {
@@ -285,7 +280,6 @@ export class ErroApi extends Error {
   }
 }
 
-/** Mensagem pronta para mostrar ao usuário a partir de qualquer erro. */
 export function mensagemDeErro(erro: unknown): string {
   if (erro instanceof ErroApi) return erro.message
   return 'Não foi possível falar com o servidor. Confira a sua conexão e tente de novo.'
@@ -377,11 +371,11 @@ export const api = {
   sugerirPorFoto: (imagemBase64: string) => chamar<Sugestao>('POST', '/ia/sugestoes/foto', { imagemBase64 }),
   descartarSugestao: (id: number) => chamar<void>('DELETE', `/ia/sugestoes/${id}`),
   estimarAlimentoPorTexto: (descricao: string) =>
-    chamar<{ proposta: PropostaAlimento; usosRestantes: number }>('POST', '/ia/alimentos/texto', { descricao }),
+    chamar<{ proposta: PropostaAlimento; usosRestantes: number | null }>('POST', '/ia/alimentos/texto', { descricao }),
   estimarAlimentoPorFoto: (imagemBase64: string, descricao: string | null) =>
-    chamar<{ proposta: PropostaAlimento; usosRestantes: number }>('POST', '/ia/alimentos/foto', { imagemBase64, descricao }),
+    chamar<{ proposta: PropostaAlimento; usosRestantes: number | null }>('POST', '/ia/alimentos/foto', { imagemBase64, descricao }),
   lerPrescricao: (arquivoBase64: string) =>
-    chamar<{ leitura: PrescricaoLida; usosRestantes: number }>('POST', '/ia/prescricao', {
+    chamar<{ leitura: PrescricaoLida; usosRestantes: number | null }>('POST', '/ia/prescricao', {
       arquivoBase64,
       confirmaEnvio: true,
     }),

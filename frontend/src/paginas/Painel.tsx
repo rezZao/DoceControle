@@ -16,7 +16,6 @@ const rotuloEstado: Record<EstadoLembrete, string> = {
   inativo: 'Desativado',
 }
 
-/** Navegação entre dias. */
 export function SeletorDeDia({ data, aoMudar }: { data: string; aoMudar: (data: string) => void }) {
   const hoje = dataIso()
   return (
@@ -98,7 +97,6 @@ function ListaRegistros({ registros, aoMudar }: { registros: RegistroRefeicao[];
   )
 }
 
-/** Os três macronutrientes do dia, sempre no topo. A meta de proteínas só aparece se foi informada (RN04). */
 function Macros({ dia }: { dia: Dia }) {
   return (
     <ul className="macros" aria-label="Macronutrientes do dia">
@@ -133,10 +131,6 @@ function Macros({ dia }: { dia: Dia }) {
   )
 }
 
-/**
- * Uma refeição do dia. Os itens registrados ficam recolhidos: o cartão mostra só o resumo (carboidratos contra o
- * limite, proteínas e gorduras) e abre ao tocar na seta.
- */
 function LinhaRefeicao({ r, data, aoMudar }: { r: RefeicaoDoDia; data: string; aoMudar: () => void }) {
   const [aberta, setAberta] = useState(false)
   const idDetalhes = useId()
@@ -207,7 +201,6 @@ function LinhaRefeicao({ r, data, aoMudar }: { r: RefeicaoDoDia; data: string; a
   )
 }
 
-/** Tempo desde a última refeição, quando o médico orientou um máximo. Só sinaliza o tempo (RI04). */
 function CartaoJejum() {
   const { jejum } = useLembretes()
   if (!jejum || (jejum.estado !== 'Contando' && jejum.estado !== 'Excedido')) return null
@@ -296,7 +289,6 @@ function CartaoLembretes() {
   )
 }
 
-// RF08: painel do dia, com o consumo em relação aos limites, o restante e o aviso de limite ultrapassado.
 export function Painel() {
   const [parametros, setParametros] = useSearchParams()
   const local = useLocation()
@@ -327,7 +319,6 @@ export function Painel() {
       ))}
 
       {!dia.prescricao ? (
-        // RN02: sem limite cadastrado, a dieta não é gerada e o site pede a informação.
         <section className="cartao cartao-destaque">
           <h2>Informe os limites do seu médico</h2>
           <p>

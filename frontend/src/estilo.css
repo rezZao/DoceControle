@@ -1,22 +1,23 @@
-/* DoceControle: estilos.
-   RNF01 (WCAG 2.2 AA): contraste de texto >= 4,5:1, foco sempre visível, alvos de toque de 44 px,
-   tamanhos em rem (o texto acompanha o zoom do navegador) e nada depende só de cor. */
+/* DoceControle: estilos */
 
 :root {
   color-scheme: light;
-  --plano: #f3f6f5;
-  --superficie: #ffffff;
-  --tinta: #10201f;
-  --tinta-2: #3f4f4d;
-  --mudo: #5b6a68;
-  --borda: #e1e8e6;
-  --borda-forte: #7b8987;
-  --acento: #0b7a75;
-  --acento-forte: #075e5a;
+  --plano: #f9f5e9;
+  --superficie: #fffefb;
+  --tinta: #14261c;
+  --tinta-2: #3d4f43;
+  --mudo: #566559;
+  --borda: #e6e3d3;
+  --borda-forte: #76847a;
+  --acento: #0f5a3b;
+  --acento-forte: #0a432c;
   --sobre-acento: #ffffff;
-  --acento-fundo: #e3f4f2;
-  --serie: #0d9488;
-  --serie-trilho: #d6eeea;
+  --acento-fundo: #e9f1d9;
+  --serie: #5d8d2a;
+  --serie-trilho: #dfe9c6;
+  /* cores da logo */
+  --marca-escuro: #0f5a3b;
+  --marca-folha: #84ad4f;
   --critico: #d03b3b;
   --critico-texto: #a32323;
   --critico-fundo: #fbe9e9;
@@ -28,37 +29,38 @@
   --ia-texto: #4a2f9e;
   --ia-fundo: #eeeafc;
   --raio: 20px;
-  --sombra: 0 1px 2px rgba(16, 32, 31, 0.05), 0 4px 16px rgba(16, 32, 31, 0.05);
+  --sombra: 0 1px 2px rgba(20, 38, 28, 0.05), 0 4px 16px rgba(20, 38, 28, 0.05);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --plano: #0c1211;
-    --superficie: #162120;
-    --tinta: #eef4f2;
-    --tinta-2: #cfdad7;
-    --mudo: #a2b1ae;
-    --borda: #263533;
-    --borda-forte: #6f817e;
-    --acento: #5ad1c4;
-    --acento-forte: #8fe3da;
-    --sobre-acento: #062421;
-    --acento-fundo: #0f2b29;
-    --serie: #22a094;
-    --serie-trilho: #153f3b;
-    --critico: #e66767;
-    --critico-texto: #f5a3a3;
-    --critico-fundo: #3a1616;
-    --critico-trilho: #5a2323;
-    --ok-texto: #7fd487;
-    --ok-fundo: #12301a;
-    --alerta-texto: #f6d778;
-    --alerta-fundo: #3a2e0a;
-    --ia-texto: #c3b8f5;
-    --ia-fundo: #272046;
-    --sombra: none;
-  }
+/* tema escuro: só vale com data-tema="escuro" no <html> (botão do cabeçalho) */
+:root[data-tema='escuro'] {
+  color-scheme: dark;
+  --plano: #0c130e;
+  --superficie: #16201a;
+  --tinta: #eef3e8;
+  --tinta-2: #d0dccb;
+  --mudo: #a3b3a5;
+  --borda: #26332a;
+  --borda-forte: #70847a;
+  --acento: #9ccb63;
+  --acento-forte: #bddf8d;
+  --sobre-acento: #0a2013;
+  --acento-fundo: #1c2b1b;
+  --serie: #84ad4f;
+  --serie-trilho: #2a3d22;
+  --marca-escuro: #e9f3d8;
+  --marca-folha: #9ccb63;
+  --critico: #e66767;
+  --critico-texto: #f5a3a3;
+  --critico-fundo: #3a1616;
+  --critico-trilho: #5a2323;
+  --ok-texto: #7fd487;
+  --ok-fundo: #12301a;
+  --alerta-texto: #f6d778;
+  --alerta-fundo: #3a2e0a;
+  --ia-texto: #c3b8f5;
+  --ia-fundo: #272046;
+  --sombra: none;
 }
 
 *,
@@ -178,16 +180,57 @@ ul {
 }
 
 .marca-grande {
-  font-size: 1.5rem;
-  margin: 1rem 0;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+  font-size: 1.9rem;
+  margin: 1rem 0 1.25rem;
 }
 
-.marca-gota {
-  width: 1.1em;
-  height: 1.1em;
-  background: var(--serie);
-  border-radius: 0 50% 50% 50%;
-  transform: rotate(45deg);
+.marca-grande .marca-simbolo {
+  width: 3.4em;
+}
+
+.topo-direita {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.botao-tema {
+  border: 1px solid var(--borda);
+  background: var(--superficie);
+}
+
+.tema-canto {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.marca-simbolo {
+  flex: none;
+  width: 1.9em;
+  height: auto;
+}
+
+.simbolo-gota {
+  fill: var(--marca-escuro);
+}
+
+.simbolo-folha {
+  fill: var(--marca-folha);
+}
+
+.marca-texto {
+  letter-spacing: 0.005em;
+}
+
+.marca-doce {
+  color: var(--marca-escuro);
+}
+
+.marca-controle {
+  color: var(--marca-folha);
 }
 
 .menu {
@@ -604,7 +647,7 @@ input[type='file'] {
   color: var(--ia-texto);
 }
 
-/* Medidor (RF08) */
+/* Medidor */
 
 .medidor-trilho {
   height: 0.75rem;
@@ -882,7 +925,7 @@ input[type='file'] {
   font-variant-numeric: tabular-nums;
 }
 
-/* Lembrete de insulina (RF10): o aviso visual equivale ao som (RN11) */
+/* Lembrete de insulina */
 
 .lembrete-fundo {
   position: fixed;
@@ -1758,7 +1801,7 @@ path.marca-critico {
   font-variant-numeric: tabular-nums;
 }
 
-/* Relatório (RF13) */
+/* Relatório */
 
 .relatorio {
   background: var(--superficie);

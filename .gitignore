@@ -30,3 +30,7 @@ Thumbs.db
 
 # Programa gerado por publicar.ps1
 dist/
+
+
+# Materiais de divulgação (banner e vídeos), fora do código
+divulgacao/

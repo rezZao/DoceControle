@@ -1,6 +1,4 @@
-// Leitura de código de barras em uma foto, feita no próprio navegador: a imagem não sai do aparelho
-// para essa etapa. Usa o BarcodeDetector nativo quando o navegador tem (Chrome, Edge, Android) e,
-// nos demais, uma leitora em WebAssembly servida pelo próprio site (nada é baixado de CDN).
+// lê o código de barras da foto no próprio navegador (BarcodeDetector ou, na falta, uma leitora em WebAssembly local)
 
 const FORMATOS = ['ean_13', 'ean_8', 'upc_a', 'upc_e'] as const
 
@@ -32,7 +30,6 @@ async function criarDetector(): Promise<Detector> {
   return new ponyfill.BarcodeDetector({ formats: [...FORMATOS] }) as unknown as Detector
 }
 
-/** Procura um código de barras de produto (EAN/UPC) na foto. Devolve só os números, ou nulo se não achar. */
 export async function lerCodigoDeBarras(arquivo: Blob): Promise<string | null> {
   detector ??= criarDetector()
   let leitora: Detector

@@ -7,10 +7,7 @@ public record PorcaoExemplo(int AlimentoId, string Nome, string Porcao, double P
 
 public record AvaliacaoJejum(EstadoJejum Estado, int Minutos, int RestanteMin);
 
-/// <summary>
-/// Regras fixas de cálculo (seção 4 do documento). São funções puras, sem banco e sem IA (RN21),
-/// para que o mesmo dado de entrada gere sempre o mesmo resultado (RNF07).
-/// </summary>
+// regras de cálculo da dieta: funções puras, sem banco e sem IA
 public static class Regras
 {
     public const int MaxRefeicoesPorDia = 10;
@@ -18,15 +15,10 @@ public static class Regras
 
     public static double Arredondar(double valor) => Math.Round(valor, 1, MidpointRounding.AwayFromZero);
 
-    /// <summary>
-    /// RN06: nutriente = quantidade consumida (g) × nutriente por 100 g ÷ 100.
-    /// </summary>
+    // RN06: nutriente = quantidade (g) x nutriente por 100 g / 100
     public static double Nutriente(double quantidadeG, double por100g) => quantidadeG * por100g / 100.0;
 
-    /// <summary>
-    /// RN03: divide o limite diário em partes iguais. Cada parte é truncada em uma casa decimal,
-    /// de modo que a soma nunca ultrapasse o limite (RI03).
-    /// </summary>
+    // RN03: partes iguais, truncadas em 1 casa para a soma não passar do limite
     public static double[] DividirIgualmente(double limiteDia, int refeicoes)
     {
         if (refeicoes <= 0) throw new ArgumentOutOfRangeException(nameof(refeicoes));
@@ -36,14 +28,13 @@ public static class Regras
         return Enumerable.Repeat((double)parte, refeicoes).ToArray();
     }
 
-    /// <summary>RN03 / RI03: nenhuma parte negativa e soma menor ou igual ao limite diário.</summary>
     public static bool DivisaoRespeitaLimite(double limiteDia, IEnumerable<double> partes)
     {
         var lista = partes.ToList();
         return lista.All(p => p >= 0) && lista.Sum(p => (decimal)p) <= (decimal)limiteDia;
     }
 
-    /// <summary>RN08: só classifica o valor em relação à faixa prescrita. Não diagnostica (RI04).</summary>
+    // RN08: só compara com a faixa prescrita, não diagnostica
     public static SituacaoGlicemia ClassificarGlicemia(int valor, Prescricao? vigente)
     {
         if (vigente is null) return SituacaoGlicemia.SemPrescricao;
@@ -52,10 +43,7 @@ public static class Regras
         return SituacaoGlicemia.NaFaixa;
     }
 
-    /// <summary>
-    /// RN05: porções de exemplo vêm da base de alimentos e só aparecem quando cabem
-    /// no limite restante da refeição. Uma por categoria, da maior para a menor em carboidratos.
-    /// </summary>
+    // RN05: uma porção por categoria, só as que cabem no que resta da refeição
     public static List<PorcaoExemplo> PorcoesDeExemplo(
         IEnumerable<Alimento> baseAlimentos, string nomeRefeicao, double restanteCarbo,
         int maximo = MaxExemplosPorRefeicao)
@@ -84,7 +72,6 @@ public static class Regras
             .ToList();
     }
 
-    /// <summary>Classifica a refeição pelo nome para escolher exemplos coerentes. Nulo = qualquer tipo.</summary>
     public static string? TipoDaRefeicao(string nome)
     {
         var n = Normalizar(nome);
@@ -94,12 +81,7 @@ public static class Regras
         return null;
     }
 
-    /// <summary>
-    /// Tempo desde a última refeição em relação ao máximo que o médico orientou ficar sem comer.
-    /// Só sinaliza o tempo: não indica conduta (RI04). A contagem parte da última refeição registrada hoje
-    /// ou, se ainda não houve registro, do horário da primeira refeição do plano. Encerra quando a última
-    /// refeição do plano é registrada (o resto do dia é descanso, não jejum).
-    /// </summary>
+    // conta desde a última refeição de hoje (ou a primeira do plano) e para quando a última do plano é registrada
     public static AvaliacaoJejum AvaliarJejum(
         DateTime agora, int? limiteMin, DateTime? ultimaRefeicao, TimeOnly? primeiraMeta, bool planoEncerrado)
     {
@@ -116,7 +98,7 @@ public static class Regras
         return new(restante < 0 ? EstadoJejum.Excedido : EstadoJejum.Contando, minutos, restante);
     }
 
-    /// <summary>Confere o formato e o dígito verificador de EAN-8, UPC-A (12), EAN-13 e GTIN-14.</summary>
+    // confere o formato e o dígito verificador (EAN-8, UPC-A, EAN-13 e GTIN-14)
     public static bool CodigoDeBarrasValido(string? codigo)
     {
         if (string.IsNullOrEmpty(codigo) || codigo.Length is not (8 or 12 or 13 or 14)) return false;
@@ -132,11 +114,9 @@ public static class Regras
         return (10 - soma % 10) % 10 == codigo[^1] - '0';
     }
 
-    /// <summary>UPC-A (12 dígitos) é o mesmo código que o EAN-13 com um zero na frente; guardamos sempre assim.</summary>
     public static string NormalizarCodigoDeBarras(string codigo) =>
         codigo.Length == 12 ? "0" + codigo : codigo;
 
-    /// <summary>Valida um alimento criado pelo usuário. Devolve a mensagem de erro, ou nulo se estiver tudo certo.</summary>
     public static string? ValidarAlimento(
         string? nome, double carboPor100g, double proteinaPor100g, double gorduraPor100g, double porcaoG,
         string? porcaoDescricao,
@@ -161,7 +141,6 @@ public static class Regras
         return null;
     }
 
-    /// <summary>Minúsculas e sem acentos, para comparar nomes.</summary>
     public static string Normalizar(string texto)
     {
         var decomposto = texto.Trim().ToLowerInvariant().Normalize(NormalizationForm.FormD);
@@ -174,10 +153,7 @@ public static class Regras
     }
 }
 
-/// <summary>
-/// Textos fixos de saúde (RN08, RN15). Não indicam conduta nem tratamento.
-/// PROVISÓRIOS: precisam da revisão de um profissional de saúde antes de qualquer uso real.
-/// </summary>
+// textos fixos de saúde (RN08, RN15); provisórios, falta a revisão de um profissional de saúde
 public static class Textos
 {
     public const string NaoSubstituiOrientacao =

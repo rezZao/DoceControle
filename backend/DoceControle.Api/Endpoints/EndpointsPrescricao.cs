@@ -29,11 +29,8 @@ public static class EndpointsPrescricao
         return Results.Json(vigente?.ParaDto());
     }
 
-    // RF03 / RF12: registrar ou atualizar a prescrição. Cada mudança vira uma nova prescrição,
-    // vigente a partir de hoje, e o histórico continua usando os limites da época (RN13).
     private static async Task<IResult> Registrar(PrescricaoReq req, ClaimsPrincipal principal, BancoDeDados db)
     {
-        // RN01: os valores só entram com a confirmação de que vieram de um profissional de saúde.
         if (!req.ConfirmaPrescricaoProfissional)
             return Erro.Invalido(
                 "Confirme que estes valores foram prescritos por um profissional de saúde.", "sem_confirmacao");
@@ -89,7 +86,7 @@ public static class EndpointsPrescricao
         }
         catch (InvalidOperationException ex)
         {
-            return Erro.Invalido(ex.Message, "divisao_acima_do_limite"); // RI03
+            return Erro.Invalido(ex.Message, "divisao_acima_do_limite");
         }
 
         // Duas alterações no mesmo dia: vale a última.
@@ -99,8 +96,6 @@ public static class EndpointsPrescricao
         return Results.Ok(prescricao.ParaDto());
     }
 
-    // Tempo desde a última refeição em relação ao máximo que o médico orientou ficar sem comer.
-    // Só sinaliza: não indica conduta (RI04). O navegador manda a hora local, como nos demais registros.
     private static async Task<IResult> ObterJejum(
         ClaimsPrincipal principal, BancoDeDados db, ServicoDia servico, string? agora)
     {
@@ -131,8 +126,6 @@ public static class EndpointsPrescricao
             avaliacao.Estado == EstadoJejum.Excedido ? Textos.JejumExcedido : null));
     }
 
-    // Lembretes de insulina (RF10). São opcionais: o site funciona sem eles (RN12, RI07).
-
     private static async Task<IResult> ListarLembretes(ClaimsPrincipal principal, BancoDeDados db, string? data)
     {
         var dia = Formatos.LerData(data, out var d) ? d : Formatos.Hoje();
@@ -162,9 +155,9 @@ public static class EndpointsPrescricao
     private static void Aplicar(LembreteInsulina lembrete, LembreteReq req, TimeOnly horario)
     {
         lembrete.Horario = horario;
-        lembrete.DoseInformada = req.DoseInformada; // RN10: só informação; nunca entra em cálculo.
+        lembrete.DoseInformada = req.DoseInformada;
         lembrete.Descricao = string.IsNullOrWhiteSpace(req.Descricao) ? null : req.Descricao.Trim();
-        lembrete.RepeticaoMin = req.RepeticaoMin ?? 5; // RN09: padrão de 5 minutos.
+        lembrete.RepeticaoMin = req.RepeticaoMin ?? 5;
         lembrete.Ativo = req.Ativo;
     }
 

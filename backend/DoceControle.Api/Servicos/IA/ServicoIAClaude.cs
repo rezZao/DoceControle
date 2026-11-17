@@ -8,10 +8,6 @@ using DoceControle.Api.Dominio;
 
 namespace DoceControle.Api.Servicos.IA;
 
-/// <summary>
-/// Provedor de IA: Claude, pela API da Anthropic (SDK oficial para C#). As respostas são restritas por
-/// esquema JSON, então a IA devolve só os campos pedidos, nunca texto livre.
-/// </summary>
 public class ServicoIAClaude : IServicoIA
 {
     private const string TextoOuNulo = """{ "anyOf": [ { "type": "string" }, { "type": "null" } ] }""";
@@ -183,7 +179,7 @@ public class ServicoIAClaude : IServicoIA
             Model = _modelo,
             MaxTokens = 16000,
             System = instrucoes,
-            // Extração simples: esforço baixo responde mais rápido (meta do RNF10) e custa menos (RNF13).
+            // extração simples: esforço baixo responde mais rápido e custa menos
             OutputConfig = new OutputConfig
             {
                 Effort = Effort.Low,
@@ -222,7 +218,7 @@ public class ServicoIAClaude : IServicoIA
             throw new IAIndisponivelException("A IA não respondeu a tempo.", ex);
         }
 
-        // "refusal" e "max_tokens" não trazem um JSON completo: trata como indisponível (RN19).
+        // "refusal" e "max_tokens" não trazem um JSON completo: trata como indisponível
         if (resposta.StopReason != "end_turn")
         {
             _log.LogWarning("IA: resposta encerrada com motivo inesperado.");

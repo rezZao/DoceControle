@@ -3,16 +3,11 @@ import { Link } from 'react-router-dom'
 import { api, mensagemDeErro, type Alimento, type NovoAlimento as Envio, type PropostaAlimento } from '../api'
 import { lerCodigoDeBarras } from '../codigoDeBarras'
 import { useContaAtiva } from '../conta'
-import { fmt, lerNumero, prepararFoto, rolarPara } from '../util'
+import { fmt, lerNumero, prepararFoto, rolarPara, textoUsosDaIA, usosRestantesDaIA } from '../util'
 import { Aviso, Icone, Selo } from './Base'
 
 type Modo = 'manual' | 'ia' | 'codigo'
 
-/**
- * Criar um alimento novo: manualmente, com a ajuda da IA ou a partir do código de barras.
- * Em qualquer caminho os valores aparecem no formulário para o usuário conferir e corrigir antes de salvar.
- * Os alimentos criados valem só para a conta dele e entram no cálculo como os demais (RN06).
- */
 export function NovoAlimento({
   nomeInicial = '',
   propostaInicial,
@@ -20,9 +15,7 @@ export function NovoAlimento({
   aoCancelar,
 }: {
   nomeInicial?: string
-  /** Dados já lidos (por exemplo, de um código de barras) para abrir o formulário preenchido. */
   propostaInicial?: PropostaAlimento
-  /** Chamado com o alimento recém-criado ou, se o código já existia, com o alimento encontrado. */
   aoPronto: (alimento: Alimento) => void
   aoCancelar: () => void
 }) {
@@ -50,7 +43,7 @@ export function NovoAlimento({
 
   const ia = conta.ia
   const iaDisponivel = ia.configurada && ia.consentida
-  const usosRestantes = Math.max(0, ia.limiteDiario - ia.usosHoje)
+  const usosRestantes = usosRestantesDaIA(ia)
 
   function preencher(p: PropostaAlimento) {
     setNome(p.nome)
@@ -68,9 +61,7 @@ export function NovoAlimento({
     window.setTimeout(() => campoNome.current?.focus(), 0)
   }
 
-  // Ao abrir, leva o painel para a tela: ele fica no topo da página e o botão que o abre pode estar lá embaixo.
-  // Espera o layout assentar: quando algo surge acima da tela, o navegador ajusta a rolagem para manter o
-  // conteúdo visível no lugar, e esse ajuste cancelaria uma rolagem pedida no mesmo instante.
+  // ao abrir, rola até o painel; espera o layout assentar, senão o navegador cancela a rolagem
   useEffect(() => {
     const espera = window.setTimeout(() => {
       rolarPara(secao.current)
@@ -81,8 +72,6 @@ export function NovoAlimento({
 
   useEffect(() => {
     if (propostaInicial) preencher(propostaInicial)
-    // Só na abertura: o formulário passa a ser do usuário.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function executar(rotulo: string, acao: () => Promise<void>) {
@@ -107,7 +96,6 @@ export function NovoAlimento({
   const estimarPorFoto = (arquivo: File | undefined) =>
     arquivo &&
     executar('Lendo a foto…', async () => {
-      // Foto do alimento ou do rótulo; vai reduzida, sem metadados, e não fica guardada (RN22).
       const r = await api.estimarAlimentoPorFoto(await prepararFoto(arquivo, 1600), descricaoIA.trim() || null)
       preencher(r.proposta)
     })
@@ -251,7 +239,7 @@ export function NovoAlimento({
                 A foto faz parte do plano premium. <Link to="/conta">Conhecer o premium</Link>.
               </>
             )}{' '}
-            {iaDisponivel && `${usosRestantes} de ${ia.limiteDiario} usos restantes hoje.`}
+            {iaDisponivel && textoUsosDaIA(ia)}
           </p>
         </div>
       )}

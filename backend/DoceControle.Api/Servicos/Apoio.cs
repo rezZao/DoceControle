@@ -2,24 +2,16 @@ using DoceControle.Api.Dominio;
 
 namespace DoceControle.Api.Servicos;
 
-/// <summary>
-/// Provedor de pagamento externo (RF19). O sistema nunca recebe nem guarda dados de cartão (RI14);
-/// só registra se a assinatura está ativa (RN26).
-/// </summary>
 public interface IProvedorPagamento
 {
     bool Simulado { get; }
 
-    /// <summary>Devolve verdadeiro quando o provedor confirma a assinatura.</summary>
     Task<bool> AssinarAsync(Usuario usuario, CancellationToken ct);
 
     Task CancelarAsync(Usuario usuario, CancellationToken ct);
 }
 
-/// <summary>
-/// Simulação para o escopo acadêmico: aprova na hora e não movimenta dinheiro.
-/// Uma versão comercial troca esta classe pela integração com um provedor real.
-/// </summary>
+// pagamento simulado: aprova na hora e não movimenta dinheiro
 public class ProvedorPagamentoSimulado : IProvedorPagamento
 {
     public bool Simulado => true;
@@ -27,16 +19,12 @@ public class ProvedorPagamentoSimulado : IProvedorPagamento
     public Task CancelarAsync(Usuario usuario, CancellationToken ct) => Task.CompletedTask;
 }
 
-/// <summary>
-/// RN22 / RI13: a foto segue para a IA sem metadados (EXIF, GPS, comentários) e não é armazenada.
-/// O navegador já reencoda a imagem; esta é a segunda barreira, no servidor.
-/// </summary>
+// tira os metadados (EXIF, GPS) do JPEG antes de enviar à IA
 public static class LimpadorDeFoto
 {
     public static bool EhJpeg(ReadOnlySpan<byte> dados) =>
         dados.Length > 4 && dados[0] == 0xFF && dados[1] == 0xD8 && dados[2] == 0xFF;
 
-    /// <summary>Copia o JPEG descartando os segmentos APP1..APP15 e COM. Mantém APP0 (JFIF) e os dados da imagem.</summary>
     public static byte[] RemoverMetadados(byte[] jpeg)
     {
         if (!EhJpeg(jpeg)) throw new InvalidDataException("A imagem precisa estar em JPEG.");

@@ -4,7 +4,6 @@ import { api, mensagemDeErro } from '../api'
 import { Aviso } from '../componentes/Base'
 import { useConta } from '../conta'
 
-// RF02: autenticação por e-mail e senha.
 export function Entrar() {
   const { recarregar, sessaoEncerrada } = useConta()
   const [email, setEmail] = useState('')
@@ -59,8 +58,6 @@ export function Entrar() {
   )
 }
 
-// RF01: cadastro com consentimento específico e destacado para dados de saúde (LGPD).
-// O consentimento para a IA é um item separado e opcional (RN20).
 export function Cadastro() {
   const { recarregar } = useConta()
   const [nome, setNome] = useState('')

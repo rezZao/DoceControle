@@ -1,11 +1,11 @@
-// Ícones do Google Material Symbols, estilo "outlined", peso 400 (pacote @material-symbols/svg-400, licença
-// Apache 2.0). Só os que o app usa entram no site: cada SVG é importado como texto e só o traço é aproveitado.
+// ícones do Google Material Symbols (outlined, Apache 2.0); só os que o app usa entram no site
 import add from '@material-symbols/svg-400/outlined/add.svg?raw'
 import bedtime from '@material-symbols/svg-400/outlined/bedtime.svg?raw'
 import checkCircle from '@material-symbols/svg-400/outlined/check_circle.svg?raw'
 import chevronLeft from '@material-symbols/svg-400/outlined/chevron_left.svg?raw'
 import chevronRight from '@material-symbols/svg-400/outlined/chevron_right.svg?raw'
 import coffee from '@material-symbols/svg-400/outlined/coffee.svg?raw'
+import darkMode from '@material-symbols/svg-400/outlined/dark_mode.svg?raw'
 import deleteIcon from '@material-symbols/svg-400/outlined/delete.svg?raw'
 import dinnerDining from '@material-symbols/svg-400/outlined/dinner_dining.svg?raw'
 import edit from '@material-symbols/svg-400/outlined/edit.svg?raw'
@@ -15,6 +15,7 @@ import home from '@material-symbols/svg-400/outlined/home.svg?raw'
 import info from '@material-symbols/svg-400/outlined/info.svg?raw'
 import keyboardArrowDown from '@material-symbols/svg-400/outlined/keyboard_arrow_down.svg?raw'
 import keyboardArrowUp from '@material-symbols/svg-400/outlined/keyboard_arrow_up.svg?raw'
+import lightMode from '@material-symbols/svg-400/outlined/light_mode.svg?raw'
 import menu from '@material-symbols/svg-400/outlined/menu.svg?raw'
 import menuBook from '@material-symbols/svg-400/outlined/menu_book.svg?raw'
 import notifications from '@material-symbols/svg-400/outlined/notifications.svg?raw'
@@ -45,6 +46,8 @@ export const caminhos = {
   'chevron-baixo': caminho(keyboardArrowDown),
   expandir: caminho(keyboardArrowDown),
   recolher: caminho(keyboardArrowUp),
+  sol: caminho(lightMode),
+  lua: caminho(darkMode),
   // Navegação
   casa: caminho(home),
   prato: caminho(menuBook),
@@ -65,7 +68,6 @@ export const caminhos = {
 
 export type NomeIcone = keyof typeof caminhos
 
-/** Ícone de uma refeição pelo nome ("Café da manhã", "Lanche da tarde", "Almoço", "Jantar", "Ceia"). */
 export function iconeDaRefeicao(nome: string): NomeIcone {
   const n = nome
     .toLowerCase()

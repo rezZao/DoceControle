@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react'
 import { Link, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { Carregando, Icone } from './componentes/Base'
 import { ProvedorLembretes } from './componentes/Lembretes'
+import { AlternarTema } from './componentes/AlternarTema'
+import { Marca } from './componentes/Marca'
 import { useConta } from './conta'
 import { Cadastro, Entrar } from './paginas/Entrada'
 import { Painel } from './paginas/Painel'
@@ -18,12 +20,10 @@ interface ItemMenu {
   para: string
   rotulo: string
   icone: 'casa' | 'prato' | 'mais' | 'gota' | 'menu'
-  /** Rotas que também deixam este item marcado. */
   alias?: string[]
   destaque?: boolean
 }
 
-// No celular vira uma barra de abas embaixo (com "Registrar" em destaque); em telas largas, fica no topo.
 const menu: ItemMenu[] = [
   { para: '/', rotulo: 'Hoje', icone: 'casa' },
   { para: '/dieta', rotulo: 'Dieta', icone: 'prato' },
@@ -58,27 +58,29 @@ function AreaLogada() {
       <header className="topo">
         <div className="topo-linha">
           <Link to="/" className="marca">
-            <span className="marca-gota" aria-hidden="true" />
-            DoceControle
+            <Marca />
           </Link>
-          <nav className="menu" aria-label="Principal">
-            {menu.map((item) => {
-              const marcado = ativo(item, local.pathname)
-              return (
-                <Link
-                  key={item.para}
-                  to={item.para}
-                  className={item.destaque ? 'menu-destaque' : undefined}
-                  aria-current={marcado ? 'page' : undefined}
-                >
-                  <span className="menu-icone">
-                    <Icone nome={item.icone} tamanho={item.destaque ? 28 : 24} />
-                  </span>
-                  <span>{item.rotulo}</span>
-                </Link>
-              )
-            })}
-          </nav>
+          <div className="topo-direita">
+            <nav className="menu" aria-label="Principal">
+              {menu.map((item) => {
+                const marcado = ativo(item, local.pathname)
+                return (
+                  <Link
+                    key={item.para}
+                    to={item.para}
+                    className={item.destaque ? 'menu-destaque' : undefined}
+                    aria-current={marcado ? 'page' : undefined}
+                  >
+                    <span className="menu-icone">
+                      <Icone nome={item.icone} tamanho={item.destaque ? 28 : 24} />
+                    </span>
+                    <span>{item.rotulo}</span>
+                  </Link>
+                )
+              })}
+            </nav>
+            <AlternarTema />
+          </div>
         </div>
       </header>
       <main id="conteudo" className="conteudo" tabIndex={-1} ref={principal}>
@@ -93,9 +95,11 @@ function AreaAberta() {
   if (conta) return <Navigate to="/" replace />
   return (
     <main className="conteudo conteudo-estreito">
+      <div className="tema-canto">
+        <AlternarTema />
+      </div>
       <p className="marca marca-grande">
-        <span className="marca-gota" aria-hidden="true" />
-        DoceControle
+        <Marca />
       </p>
       <Outlet />
     </main>

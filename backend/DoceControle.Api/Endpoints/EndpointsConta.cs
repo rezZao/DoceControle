@@ -24,9 +24,13 @@ public static class Sessao
         return http.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identidade));
     }
 
-    public static int LimiteDiarioIA(IConfiguration config, Plano plano) => plano == Plano.Premium
-        ? config.GetValue("IA:LimiteDiarioPremium", 30)
-        : config.GetValue("IA:LimiteDiarioGratuito", 5);
+    // premium sem limite, a menos que IA:LimiteDiarioPremium defina um teto
+    public static int? LimiteDiarioIA(IConfiguration config, Plano plano)
+    {
+        if (plano != Plano.Premium) return config.GetValue("IA:LimiteDiarioGratuito", 5);
+        var teto = config.GetValue<int?>("IA:LimiteDiarioPremium");
+        return teto is > 0 ? teto : null;
+    }
 }
 
 public static class EndpointsConta
@@ -46,7 +50,6 @@ public static class EndpointsConta
         assinatura.MapPost("/cancelar", Cancelar);
     }
 
-    // RF01: cadastro com consentimento específico e destacado. Sem ele, nada é gravado (RN14, RI06).
     private static async Task<IResult> Cadastrar(
         CadastroReq req, BancoDeDados db, IPasswordHasher<Usuario> hasher, HttpContext http)
     {
@@ -73,7 +76,7 @@ public static class EndpointsConta
             ConsentimentoIAEm = req.ConsentimentoIA ? agora : null,
             CriadoEm = agora,
         };
-        usuario.SenhaHash = hasher.HashPassword(usuario, senha); // RNF04: senha só com hash.
+        usuario.SenhaHash = hasher.HashPassword(usuario, senha);
         db.Usuarios.Add(usuario);
         await db.SaveChangesAsync();
 
@@ -81,7 +84,6 @@ public static class EndpointsConta
         return Results.Ok();
     }
 
-    // RF02
     private static async Task<IResult> Entrar(
         EntrarReq req, BancoDeDados db, IPasswordHasher<Usuario> hasher, HttpContext http)
     {
@@ -126,7 +128,6 @@ public static class EndpointsConta
             config.GetValue("Sessao:MinutosInatividade", 60)));
     }
 
-    // RN20: consentimento separado para a IA, que pode ser dado ou revogado a qualquer momento.
     private static async Task<IResult> MudarConsentimentoIA(
         ConsentimentoIAReq req, ClaimsPrincipal principal, BancoDeDados db)
     {
@@ -142,7 +143,6 @@ public static class EndpointsConta
         return Results.Ok();
     }
 
-    // RF14 / RN14: excluir a conta apaga todos os dados do usuário (exclusão em cascata no banco).
     private static async Task<IResult> Excluir(
         ExcluirContaReq req, ClaimsPrincipal principal, BancoDeDados db, IPasswordHasher<Usuario> hasher,
         IProvedorPagamento pagamento, HttpContext http, CancellationToken ct)
@@ -152,8 +152,7 @@ public static class EndpointsConta
             return Erro.Status(403, "Senha incorreta.", "credenciais");
 
         if (usuario.Plano == Plano.Premium) await pagamento.CancelarAsync(usuario, ct);
-        // Em ordem: as refeições saem antes dos alimentos criados pelo usuário, porque um alimento usado em
-        // uma refeição não pode ser apagado sozinho. O restante sai em cascata junto com o usuário.
+        // refeições primeiro: um alimento usado numa refeição não pode ser apagado antes
         await db.Refeicoes.Where(r => r.UsuarioId == usuario.Id).ExecuteDeleteAsync(ct);
         await db.Alimentos.Where(a => a.UsuarioId == usuario.Id).ExecuteDeleteAsync(ct);
         await db.Usuarios.Where(u => u.Id == usuario.Id).ExecuteDeleteAsync(ct);
@@ -161,7 +160,6 @@ public static class EndpointsConta
         return Results.Ok();
     }
 
-    // RF19: a assinatura passa pelo provedor externo; aqui só muda o estado (RN26).
     private static async Task<IResult> Assinar(
         ClaimsPrincipal principal, BancoDeDados db, IProvedorPagamento pagamento, CancellationToken ct)
     {
@@ -176,7 +174,6 @@ public static class EndpointsConta
         return Results.Ok();
     }
 
-    // RN25: ao cancelar, a foto é desativada e os registros já gravados são mantidos.
     private static async Task<IResult> Cancelar(
         ClaimsPrincipal principal, BancoDeDados db, IProvedorPagamento pagamento, CancellationToken ct)
     {
