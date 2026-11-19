@@ -1,0 +1,12 @@
+# API do DoceControle no Render (plano gratuito). O site fica na Vercel e repassa /api para cá (frontend/vercel.json).
+services:
+  - type: web
+    name: docecontrole-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /saude
+    envVars:
+      # chave da IA (opcional): sem ela, o registro manual funciona e a IA fica desativada
+      - key: IA__ChaveApi
+        sync: false

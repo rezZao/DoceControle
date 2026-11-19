@@ -7,6 +7,7 @@ using DoceControle.Api.Servicos;
 using DoceControle.Api.Servicos.IA;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -106,6 +107,15 @@ using (var escopo = app.Services.CreateScope())
 
 if (!emDesenvolvimento && !hospedagemLocal)
 {
+    // atrás do proxy da hospedagem (e da Vercel): o HTTPS e o IP do visitante vêm nos cabeçalhos X-Forwarded
+    var encaminhados = new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+        ForwardLimit = null,
+    };
+    encaminhados.KnownIPNetworks.Clear();
+    encaminhados.KnownProxies.Clear();
+    app.UseForwardedHeaders(encaminhados);
     app.UseHsts();
     app.UseHttpsRedirection();
 }
@@ -115,6 +125,8 @@ app.UseStaticFiles();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapGet("/saude", () => Results.Ok("ok")).AllowAnonymous(); // a hospedagem usa para saber se a API está de pé
 
 var api = app.MapGroup("/api").RequireAuthorization();
 api.MapConta();

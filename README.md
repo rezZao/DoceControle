@@ -28,6 +28,21 @@ Para mexer no frontend com recarga automática, deixe a API rodando e, em outro 
 No Windows, deixe o projeto num caminho curto (como `C:\Projetos\DoceControle`), porque caminhos muito longos
 passam do limite de 260 caracteres na compilação.
 
+## Publicar na internet (Vercel + Render)
+
+O site (React) vai para a Vercel e a API (C#) para o Render; a Vercel repassa tudo que começa com `/api` para o Render,
+então o navegador fala só com um endereço e o login por cookie funciona.
+
+1. Render: **New > Blueprint** com este repositório (usa o `render.yaml` e o `Dockerfile`). Se quiser a IA, preencha
+   `IA__ChaveApi` nas variáveis do serviço. O endereço fica parecido com `https://docecontrole-api.onrender.com`.
+2. Vercel: **Add New > Project** com este repositório, em **Root Directory** escolha `frontend`. O `vercel.json` já
+   tem o comando de build e o repasse de `/api`; se o endereço do Render for outro, troque-o em `rewrites`.
+3. Abra o endereço da Vercel e crie uma conta.
+
+No plano gratuito do Render a API dorme depois de uns minutos parada (a primeira abertura demora) e o banco SQLite
+é apagado quando o serviço reinicia. Para guardar os dados, use um disco persistente do Render e aponte
+`ConnectionStrings__Padrao` para ele.
+
 ## Programa para Windows (versão de teste)
 
 Para abrir com dois cliques, sem precisar do .NET instalado, gere o `DoceControle.exe` no PowerShell:

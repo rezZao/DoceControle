@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build -- --outDir dist",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/api/:caminho*", "destination": "https://docecontrole-api.onrender.com/api/:caminho*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
