@@ -22,7 +22,10 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 var config = builder.Configuration;
 
 // dados e configuração ficam em %LOCALAPPDATA%\DoceControle, fora da pasta do programa
-var pastaDoUsuario = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "DoceControle");
+// (em hospedagem, Dados:Pasta aponta a pasta onde guardar; sem pasta do usuário no sistema, cai na pasta temporária)
+var baseDoUsuario = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+var pastaDoUsuario = config["Dados:Pasta"]
+    ?? Path.Combine(string.IsNullOrEmpty(baseDoUsuario) ? Path.GetTempPath() : baseDoUsuario, "DoceControle");
 
 // appsettings.Local.json fica fora do Git: é onde vai a chave da IA
 builder.Configuration.AddJsonFile(Path.Combine(AppContext.BaseDirectory, "appsettings.Local.json"), optional: true);

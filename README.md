@@ -40,8 +40,8 @@ então o navegador fala só com um endereço e o login por cookie funciona.
 3. Abra o endereço da Vercel e crie uma conta.
 
 No plano gratuito do Render a API dorme depois de uns minutos parada (a primeira abertura demora) e o banco SQLite
-é apagado quando o serviço reinicia. Para guardar os dados, use um disco persistente do Render e aponte
-`ConnectionStrings__Padrao` para ele.
+é apagado quando o serviço reinicia. Para guardar os dados, use um disco persistente do Render montado em
+`/var/data` (é a pasta onde o banco e as chaves de login ficam, definida em `Dados__Pasta`).
 
 ## Programa para Windows (versão de teste)
 
